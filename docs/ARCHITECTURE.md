@@ -104,30 +104,30 @@ graph TB
 - **Location**: `web-frontend/`
 - **Technology**: Next.js 13, TypeScript, TailwindCSS
 - **Key Files**:
-    - `src/app/page.tsx` - Landing page
-    - `src/app/dashboard/page.tsx` - User dashboard
-    - `src/app/portfolio/page.tsx` - Portfolio management
-    - `src/app/market-analysis/page.tsx` - Market data visualization
+  - `src/app/page.tsx` - Landing page
+  - `src/app/dashboard/page.tsx` - User dashboard
+  - `src/app/portfolio/page.tsx` - Portfolio management
+  - `src/app/market-analysis/page.tsx` - Market data visualization
 - **Features**:
-    - Server-side rendering (SSR)
-    - Static site generation (SSG)
-    - Real-time updates via WebSocket
-    - Responsive design
-    - Web3 wallet integration
+  - Server-side rendering (SSR)
+  - Static site generation (SSG)
+  - Real-time updates via WebSocket
+  - Responsive design
+  - Web3 wallet integration
 
 #### Mobile Frontend
 
 - **Location**: `mobile-frontend/`
 - **Technology**: React Native, Expo
 - **Key Files**:
-    - `src/app/dashboard/` - Dashboard screens
-    - `src/app/portfolio/` - Portfolio screens
-    - `src/components/` - Reusable components
+  - `src/app/dashboard/` - Dashboard screens
+  - `src/app/portfolio/` - Portfolio screens
+  - `src/components/` - Reusable components
 - **Features**:
-    - Native iOS and Android support
-    - Biometric authentication
-    - Push notifications
-    - Offline mode
+  - Native iOS and Android support
+  - Biometric authentication
+  - Push notifications
+  - Offline mode
 
 ### 2. Backend Layer
 
@@ -136,26 +136,26 @@ graph TB
 - **Location**: `code/backend/`
 - **Entry Point**: `app/main.py`
 - **Structure**:
-    ```
-    app/
-    ├── main.py              # FastAPI app initialization
-    ├── api/                 # API endpoints
-    │   ├── users.py         # User management
-    │   ├── portfolio.py     # Portfolio operations
-    │   ├── market.py        # Market data
-    │   ├── ai.py            # AI endpoints
-    │   ├── blockchain.py    # Blockchain operations
-    │   └── admin.py         # Admin functions
-    ├── auth/                # Authentication
-    ├── core/                # Core configuration
-    ├── db/                  # Database
-    ├── models/              # SQLAlchemy models
-    ├── schemas/             # Pydantic schemas
-    ├── services/            # Business logic
-    ├── ai/                  # AI models
-    ├── workers/             # Celery tasks
-    └── middleware/          # Middleware
-    ```
+  ```
+  app/
+  ├── main.py              # FastAPI app initialization
+  ├── api/                 # API endpoints
+  │   ├── users.py         # User management
+  │   ├── portfolio.py     # Portfolio operations
+  │   ├── market.py        # Market data
+  │   ├── ai.py            # AI endpoints
+  │   ├── blockchain.py    # Blockchain operations
+  │   └── admin.py         # Admin functions
+  ├── auth/                # Authentication
+  ├── core/                # Core configuration
+  ├── db/                  # Database
+  ├── models/              # SQLAlchemy models
+  ├── schemas/             # Pydantic schemas
+  ├── services/            # Business logic
+  ├── ai/                  # AI models
+  ├── workers/             # Celery tasks
+  └── middleware/          # Middleware
+  ```
 
 #### Key Services
 
@@ -234,28 +234,28 @@ graph TB
 - **Location**: `code/blockchain/contracts/TokenizedAsset.sol`
 - **Type**: ERC-20 token
 - **Features**:
-    - Fractional ownership
-    - Trading controls
-    - Valuation updates
-    - Fee management
+  - Fractional ownership
+  - Trading controls
+  - Valuation updates
+  - Fee management
 
 **PortfolioManager.sol**
 
 - **Location**: `code/blockchain/contracts/PortfolioManager.sol`
 - **Purpose**: On-chain portfolio management
 - **Features**:
-    - Asset allocation
-    - Rebalancing
-    - Performance tracking
+  - Asset allocation
+  - Rebalancing
+  - Performance tracking
 
 **TradingPlatform.sol**
 
 - **Location**: `code/blockchain/contracts/TradingPlatform.sol`
 - **Purpose**: Decentralized exchange
 - **Features**:
-    - Order matching
-    - Liquidity pools
-    - Fee distribution
+  - Order matching
+  - Liquidity pools
+  - Fee distribution
 
 ### 5. Data Layer
 
@@ -263,31 +263,31 @@ graph TB
 
 - **Purpose**: Primary relational database
 - **Tables**:
-    - `users` - User accounts
-    - `portfolios` - User portfolios
-    - `assets` - Asset definitions
-    - `portfolio_assets` - Portfolio holdings
-    - `transactions` - Transaction history
-    - `ai_models` - Model metadata
-    - `ai_predictions` - Prediction results
+  - `users` - User accounts
+  - `portfolios` - User portfolios
+  - `assets` - Asset definitions
+  - `portfolio_assets` - Portfolio holdings
+  - `transactions` - Transaction history
+  - `ai_models` - Model metadata
+  - `ai_predictions` - Prediction results
 
 #### Redis
 
 - **Purpose**: Caching and message broker
 - **Usage**:
-    - Session storage
-    - API response caching
-    - Celery broker
-    - Rate limiting
-    - Real-time data
+  - Session storage
+  - API response caching
+  - Celery broker
+  - Rate limiting
+  - Real-time data
 
 #### MongoDB (Optional)
 
 - **Purpose**: Time-series market data
 - **Collections**:
-    - `market_data` - OHLCV data
-    - `news_articles` - Sentiment sources
-    - `social_media` - Social sentiment data
+  - `market_data` - OHLCV data
+  - `news_articles` - Sentiment sources
+  - `social_media` - Social sentiment data
 
 ## Data Flow
 

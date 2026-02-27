@@ -395,33 +395,33 @@ if response.json()["status"] == "SUCCESS":
 The web dashboard provides visual access to all platform features:
 
 1. **Home Page** (`/`)
-    - Platform overview
-    - Key statistics
-    - Quick actions
+   - Platform overview
+   - Key statistics
+   - Quick actions
 
 2. **Portfolio Dashboard** (`/portfolio`)
-    - Portfolio list
-    - Performance charts
-    - Asset allocation
-    - Transaction history
+   - Portfolio list
+   - Performance charts
+   - Asset allocation
+   - Transaction history
 
 3. **Market Analysis** (`/market-analysis`)
-    - Real-time market data
-    - Interactive charts
-    - Technical indicators
-    - News feed
+   - Real-time market data
+   - Interactive charts
+   - Technical indicators
+   - News feed
 
 4. **AI Recommendations** (`/recommendations`)
-    - Investment suggestions
-    - Risk analysis
-    - Market predictions
-    - Portfolio optimization tips
+   - Investment suggestions
+   - Risk analysis
+   - Market predictions
+   - Portfolio optimization tips
 
 5. **Blockchain Explorer** (`/blockchain-explorer`)
-    - Token balances
-    - Transaction history
-    - Smart contract interactions
-    - Asset tokenization
+   - Token balances
+   - Transaction history
+   - Smart contract interactions
+   - Asset tokenization
 
 ### Navigation
 

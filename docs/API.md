@@ -6,12 +6,12 @@
 - [Authentication](#authentication)
 - [Base URL](#base-url)
 - [Endpoints](#endpoints)
-    - [Users API](#users-api)
-    - [Portfolio API](#portfolio-api)
-    - [Market Data API](#market-data-api)
-    - [AI API](#ai-api)
-    - [Blockchain API](#blockchain-api)
-    - [Admin API](#admin-api)
+  - [Users API](#users-api)
+  - [Portfolio API](#portfolio-api)
+  - [Market Data API](#market-data-api)
+  - [AI API](#ai-api)
+  - [Blockchain API](#blockchain-api)
+  - [Admin API](#admin-api)
 - [Response Formats](#response-formats)
 - [Error Handling](#error-handling)
 - [Rate Limiting](#rate-limiting)
@@ -48,12 +48,12 @@ email=user@example.com&password=yourpassword
 
 ```json
 {
-    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-    "token_type": "bearer",
-    "user_id": 1,
-    "username": "john_doe",
-    "email": "user@example.com",
-    "role": "user"
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "token_type": "bearer",
+  "user_id": 1,
+  "username": "john_doe",
+  "email": "user@example.com",
+  "role": "user"
 }
 ```
 
@@ -107,12 +107,12 @@ curl -X POST http://localhost:8000/users/ \
 
 ```json
 {
-    "id": 1,
-    "username": "john_doe",
-    "email": "john@example.com",
-    "role": "user",
-    "is_active": true,
-    "created_at": "2025-04-01T10:30:00Z"
+  "id": 1,
+  "username": "john_doe",
+  "email": "john@example.com",
+  "role": "user",
+  "is_active": true,
+  "created_at": "2025-04-01T10:30:00Z"
 }
 ```
 
@@ -130,13 +130,13 @@ GET /users/{user_id}
 
 ```json
 {
-    "id": 1,
-    "username": "john_doe",
-    "email": "john@example.com",
-    "role": "user",
-    "is_active": true,
-    "last_login": "2025-04-01T10:30:00Z",
-    "created_at": "2025-04-01T10:30:00Z"
+  "id": 1,
+  "username": "john_doe",
+  "email": "john@example.com",
+  "role": "user",
+  "is_active": true,
+  "last_login": "2025-04-01T10:30:00Z",
+  "created_at": "2025-04-01T10:30:00Z"
 }
 ```
 
@@ -205,11 +205,11 @@ curl -X POST http://localhost:8000/portfolio/ \
 
 ```json
 {
-    "id": 1,
-    "name": "Growth Portfolio",
-    "description": "High-growth tech stocks",
-    "owner_id": 1,
-    "created_at": "2025-04-01T10:30:00Z"
+  "id": 1,
+  "name": "Growth Portfolio",
+  "description": "High-growth tech stocks",
+  "owner_id": 1,
+  "created_at": "2025-04-01T10:30:00Z"
 }
 ```
 
@@ -230,13 +230,13 @@ GET /portfolio/
 
 ```json
 [
-    {
-        "id": 1,
-        "name": "Growth Portfolio",
-        "description": "High-growth tech stocks",
-        "owner_id": 1,
-        "created_at": "2025-04-01T10:30:00Z"
-    }
+  {
+    "id": 1,
+    "name": "Growth Portfolio",
+    "description": "High-growth tech stocks",
+    "owner_id": 1,
+    "created_at": "2025-04-01T10:30:00Z"
+  }
 ]
 ```
 
@@ -250,20 +250,20 @@ GET /portfolio/{portfolio_id}
 
 ```json
 {
-    "id": 1,
-    "name": "Growth Portfolio",
-    "description": "High-growth tech stocks",
-    "owner_id": 1,
-    "assets": [
-        {
-            "id": 1,
-            "asset_id": 1,
-            "quantity": 10.0,
-            "purchase_price": 150.0,
-            "purchase_date": "2025-03-15T00:00:00Z"
-        }
-    ],
-    "created_at": "2025-04-01T10:30:00Z"
+  "id": 1,
+  "name": "Growth Portfolio",
+  "description": "High-growth tech stocks",
+  "owner_id": 1,
+  "assets": [
+    {
+      "id": 1,
+      "asset_id": 1,
+      "quantity": 10.0,
+      "purchase_price": 150.0,
+      "purchase_date": "2025-03-15T00:00:00Z"
+    }
+  ],
+  "created_at": "2025-04-01T10:30:00Z"
 }
 ```
 
@@ -297,22 +297,22 @@ GET /portfolio/performance/{portfolio_id}
 
 ```json
 {
-    "portfolio_id": 1,
-    "period": "1m",
-    "start_value": 100000.0,
-    "end_value": 110000.0,
-    "return_percentage": 10.0,
-    "benchmark_return": 8.5,
-    "alpha": 1.5,
-    "beta": 0.95,
-    "sharpe_ratio": 1.2,
-    "volatility": 12.5,
-    "max_drawdown": -5.2,
-    "data_points": [
-        { "date": "2025-03-01", "value": 100000 },
-        { "date": "2025-03-15", "value": 105000 },
-        { "date": "2025-04-01", "value": 110000 }
-    ]
+  "portfolio_id": 1,
+  "period": "1m",
+  "start_value": 100000.0,
+  "end_value": 110000.0,
+  "return_percentage": 10.0,
+  "benchmark_return": 8.5,
+  "alpha": 1.5,
+  "beta": 0.95,
+  "sharpe_ratio": 1.2,
+  "volatility": 12.5,
+  "max_drawdown": -5.2,
+  "data_points": [
+    { "date": "2025-03-01", "value": 100000 },
+    { "date": "2025-03-15", "value": 105000 },
+    { "date": "2025-04-01", "value": 110000 }
+  ]
 }
 ```
 
@@ -347,12 +347,12 @@ GET /market/quote/{symbol}
 
 ```json
 {
-    "symbol": "AAPL",
-    "price": 178.5,
-    "change": 2.3,
-    "change_percent": 1.31,
-    "volume": 52000000,
-    "timestamp": "2025-04-01T15:30:00Z"
+  "symbol": "AAPL",
+  "price": 178.5,
+  "change": 2.3,
+  "change_percent": 1.31,
+  "volume": 52000000,
+  "timestamp": "2025-04-01T15:30:00Z"
 }
 ```
 
@@ -373,14 +373,14 @@ GET /ai/models/
 
 ```json
 [
-    {
-        "id": 1,
-        "name": "LSTM Price Predictor",
-        "type": "lstm",
-        "version": "1.0.0",
-        "accuracy": 0.85,
-        "status": "active"
-    }
+  {
+    "id": 1,
+    "name": "LSTM Price Predictor",
+    "type": "lstm",
+    "version": "1.0.0",
+    "accuracy": 0.85,
+    "status": "active"
+  }
 ]
 ```
 
@@ -407,10 +407,10 @@ curl -X POST "http://localhost:8000/ai/predict/asset/AAPL?days_ahead=5&model_typ
 
 ```json
 {
-    "task_id": "abc123-def456",
-    "status": "PENDING",
-    "message": "Prediction task for AAPL submitted successfully",
-    "check_status_endpoint": "/ai/tasks/abc123-def456"
+  "task_id": "abc123-def456",
+  "status": "PENDING",
+  "message": "Prediction task for AAPL submitted successfully",
+  "check_status_endpoint": "/ai/tasks/abc123-def456"
 }
 ```
 
@@ -424,10 +424,10 @@ GET /ai/tasks/{task_id}
 
 ```json
 {
-    "task_id": "abc123-def456",
-    "status": "PENDING",
-    "task_type": "asset_price_prediction",
-    "created_at": "2025-04-01T10:30:00Z"
+  "task_id": "abc123-def456",
+  "status": "PENDING",
+  "task_type": "asset_price_prediction",
+  "created_at": "2025-04-01T10:30:00Z"
 }
 ```
 
@@ -435,16 +435,16 @@ GET /ai/tasks/{task_id}
 
 ```json
 {
-    "task_id": "abc123-def456",
-    "status": "SUCCESS",
-    "task_type": "asset_price_prediction",
-    "created_at": "2025-04-01T10:30:00Z",
-    "result": {
-        "symbol": "AAPL",
-        "predictions": [179.5, 180.2, 181.0, 182.5, 183.2],
-        "confidence": 0.85,
-        "model": "lstm"
-    }
+  "task_id": "abc123-def456",
+  "status": "SUCCESS",
+  "task_type": "asset_price_prediction",
+  "created_at": "2025-04-01T10:30:00Z",
+  "result": {
+    "symbol": "AAPL",
+    "predictions": [179.5, 180.2, 181.0, 182.5, 183.2],
+    "confidence": 0.85,
+    "model": "lstm"
+  }
 }
 ```
 
@@ -481,9 +481,9 @@ POST /ai/risk/portfolio/{portfolio_id}
 
 ```json
 {
-    "task_id": "xyz789-abc123",
-    "status": "PENDING",
-    "message": "Portfolio risk analysis task submitted successfully"
+  "task_id": "xyz789-abc123",
+  "status": "PENDING",
+  "message": "Portfolio risk analysis task submitted successfully"
 }
 ```
 
@@ -524,13 +524,13 @@ GET /blockchain/asset/{contract_address}
 
 ```json
 {
-    "contract_address": "0x...",
-    "asset_symbol": "AAPL",
-    "asset_name": "Apple Inc.",
-    "asset_type": "stock",
-    "asset_value": 15000,
-    "trading_enabled": true,
-    "total_supply": 1000000
+  "contract_address": "0x...",
+  "asset_symbol": "AAPL",
+  "asset_name": "Apple Inc.",
+  "asset_type": "stock",
+  "asset_value": 15000,
+  "trading_enabled": true,
+  "total_supply": 1000000
 }
 ```
 
@@ -548,11 +548,11 @@ GET /admin/stats
 
 ```json
 {
-    "total_users": 1234,
-    "total_portfolios": 567,
-    "total_assets": 89,
-    "total_transactions": 45678,
-    "system_uptime": 345600
+  "total_users": 1234,
+  "total_portfolios": 567,
+  "total_assets": 89,
+  "total_transactions": 45678,
+  "system_uptime": 345600
 }
 ```
 
@@ -562,9 +562,9 @@ GET /admin/stats
 
 ```json
 {
-    "id": 1,
-    "name": "Resource Name",
-    "created_at": "2025-04-01T10:30:00Z"
+  "id": 1,
+  "name": "Resource Name",
+  "created_at": "2025-04-01T10:30:00Z"
 }
 ```
 
@@ -572,7 +572,7 @@ GET /admin/stats
 
 ```json
 {
-    "detail": "Error message describing what went wrong"
+  "detail": "Error message describing what went wrong"
 }
 ```
 
@@ -609,9 +609,9 @@ GET /admin/stats
 
 ```json
 {
-    "detail": "Detailed error message",
-    "type": "error_type",
-    "code": "ERROR_CODE"
+  "detail": "Detailed error message",
+  "type": "error_type",
+  "code": "ERROR_CODE"
 }
 ```
 
@@ -619,9 +619,9 @@ GET /admin/stats
 
 ```json
 {
-    "detail": "Portfolio not found",
-    "type": "not_found",
-    "code": "PORTFOLIO_NOT_FOUND"
+  "detail": "Portfolio not found",
+  "type": "not_found",
+  "code": "PORTFOLIO_NOT_FOUND"
 }
 ```
 
@@ -647,7 +647,7 @@ X-RateLimit-Reset: 1680345600
 
 ```json
 {
-    "detail": "Rate limit exceeded. Try again in 60 seconds."
+  "detail": "Rate limit exceeded. Try again in 60 seconds."
 }
 ```
 

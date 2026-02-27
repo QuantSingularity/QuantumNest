@@ -317,24 +317,24 @@ psql -U postgres -h localhost
 After successful installation:
 
 1. **Configure Environment Variables**: Review and update `.env` files
-    - See [Configuration Guide](CONFIGURATION.md)
+   - See [Configuration Guide](CONFIGURATION.md)
 
 2. **Set Up Blockchain Wallet**:
-    - Install MetaMask browser extension
-    - Configure for testnet (Goerli)
+   - Install MetaMask browser extension
+   - Configure for testnet (Goerli)
 
 3. **Explore the API**:
-    - Read [API Documentation](API.md)
-    - Try example requests in [Examples](examples/)
+   - Read [API Documentation](API.md)
+   - Try example requests in [Examples](examples/)
 
 4. **Read Usage Guide**:
-    - See [Usage Guide](USAGE.md) for common workflows
+   - See [Usage Guide](USAGE.md) for common workflows
 
 5. **Deploy Smart Contracts** (for development):
-    ```bash
-    cd code/blockchain
-    npx hardhat run scripts/deploy.js --network goerli
-    ```
+   ```bash
+   cd code/blockchain
+   npx hardhat run scripts/deploy.js --network goerli
+   ```
 
 ## Troubleshooting
 

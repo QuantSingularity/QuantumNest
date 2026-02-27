@@ -195,10 +195,10 @@ Configuration file: `web-frontend/next.config.js`
 
 ```javascript
 module.exports = {
-    env: {
-        API_URL: process.env.NEXT_PUBLIC_API_URL,
-    },
-    // ... other config
+  env: {
+    API_URL: process.env.NEXT_PUBLIC_API_URL,
+  },
+  // ... other config
 };
 ```
 

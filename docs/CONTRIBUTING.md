@@ -152,12 +152,15 @@ mypy code/backend/
 ```typescript
 // Good
 interface PortfolioProps {
-    portfolioId: number;
-    onUpdate: (portfolio: Portfolio) => void;
+  portfolioId: number;
+  onUpdate: (portfolio: Portfolio) => void;
 }
 
-export const PortfolioCard: React.FC<PortfolioProps> = ({ portfolioId, onUpdate }) => {
-    // Component implementation
+export const PortfolioCard: React.FC<PortfolioProps> = ({
+  portfolioId,
+  onUpdate,
+}) => {
+  // Component implementation
 };
 ```
 

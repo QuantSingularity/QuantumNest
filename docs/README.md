@@ -6,21 +6,21 @@
 
 1. **Clone the repository**
 
-    ```bash
-    git clone https://github.com/quantsingularity/QuantumNest.git
-    cd QuantumNest
-    ```
+   ```bash
+   git clone https://github.com/quantsingularity/QuantumNest.git
+   cd QuantumNest
+   ```
 
 2. **Run the setup script**
 
-    ```bash
-    ./setup_quantumnest_env.sh
-    ```
+   ```bash
+   ./setup_quantumnest_env.sh
+   ```
 
 3. **Start the application**
-    ```bash
-    ./run_quantumnest.sh
-    ```
+   ```bash
+   ./run_quantumnest.sh
+   ```
 
 ## 📚 Documentation Index
 
@@ -40,9 +40,9 @@
 ### Examples & Tutorials
 
 - **[Examples Directory](examples/)** - Practical code examples
-    - [AI Model Usage](examples/ai-model-usage.md)
-    - [Portfolio Management](examples/portfolio-management.md)
-    - [Blockchain Integration](examples/blockchain-integration.md)
+  - [AI Model Usage](examples/ai-model-usage.md)
+  - [Portfolio Management](examples/portfolio-management.md)
+  - [Blockchain Integration](examples/blockchain-integration.md)
 
 ### Advanced Topics
 
