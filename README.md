@@ -4,7 +4,7 @@
 [![Test Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen)](https://github.com/quantsingularity/QuantumNest/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## 🚀 AI-Powered Tokenized Asset Investment Platform
+## AI-Powered Tokenized Asset Investment Platform
 
 QuantumNest is an innovative investment platform that combines artificial intelligence, blockchain technology, and quantitative finance to provide sophisticated investment strategies for tokenized assets.
 
