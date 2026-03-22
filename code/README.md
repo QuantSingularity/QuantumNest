@@ -1,4 +1,4 @@
-# QuantumNest Capital - Financial Platform
+# QuantumNest
 
 ## Overview
 
@@ -35,52 +35,6 @@ QuantumNest Capital is a comprehensive financial technology platform designed fo
 - **High Availability**: Redis caching and session management
 - **Monitoring & Logging**: Comprehensive logging and health checks
 - **Testing Framework**: Extensive unit and integration tests
-
-## Project Structure
-
-```
-code/
-├── backend/                    # Backend API server
-│   ├── app/
-│   │   ├── ai/                # AI and ML modules
-│   │   │   ├── fraud_detection.py
-│   │   │   ├── portfolio_optimization.py
-│   │   │   ├── advanced_lstm_model.py
-│   │   │   ├── financial_advisor.py
-│   │   │   ├── anomaly_detection.py
-│   │   │   ├── sentiment_analyzer.py
-│   │   │   ├── recommendation_engine.py
-│   │   │   └── risk_profiler.py
-│   │   ├── auth/              # Authentication & authorization
-│   │   │   ├── authentication.py
-│   │   │   └── authorization.py
-│   │   ├── core/              # Core utilities
-│   │   │   ├── config.py
-│   │   │   ├── logging.py
-│   │   │   ├── security.py
-│   │   │   └── validation.py
-│   │   ├── db/                # Database management
-│   │   │   └── database_manager.py
-│   │   ├── middleware/        # Security middleware
-│   │   │   └── security_middleware.py
-│   │   ├── models/            # Data models
-│   │   │   └── models.py
-│   │   ├── services/          # Business services
-│   │   │   ├── trading_service.py
-│   │   │   ├── market_data_service.py
-│   │   │   └── risk_management_service.py
-│   │   ├── utils/             # Utilities
-│   │   │   └── encryption.py
-│   │   ├── main.py           # Original FastAPI app
-│   │   └── main_flask.py     # Flask app
-│   ├── tests/                 # Test suite
-│   │   ├── conftest.py
-│   │   └── test_unit_authentication.py
-│   ├── requirements.txt       # Python dependencies
-│   └── run_tests.py          # Test runner
-├── blockchain/                # Blockchain components (original)
-└── frontend/                  # Frontend components (original)
-```
 
 ## 🛠 Installation & Setup
 
