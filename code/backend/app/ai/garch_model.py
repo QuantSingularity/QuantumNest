@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 class GARCHModel:
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize GARCH model for volatility forecasting
 

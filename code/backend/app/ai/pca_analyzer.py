@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 
 class PCAAnalyzer:
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize PCA model for market analysis
 

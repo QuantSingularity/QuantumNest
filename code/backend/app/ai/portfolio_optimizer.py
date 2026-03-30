@@ -9,7 +9,7 @@ import scipy.optimize as sco
 
 class PortfolioOptimizer:
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize portfolio optimization model
 

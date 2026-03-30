@@ -47,7 +47,7 @@ client = TestClient(app)
 
 class MockAsyncResult:
 
-    def __init__(self, id: Any, status: Any = "SUCCESS", result: Any = None) -> Any:
+    def __init__(self, id: Any, status: Any = "SUCCESS", result: Any = None) -> None:
         self.id = id
         self._status = status
         self._result = result

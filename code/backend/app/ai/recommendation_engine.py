@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 
 class AIRecommendationEngine:
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize AI recommendation engine
 

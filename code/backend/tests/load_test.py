@@ -32,7 +32,7 @@ class LoadTest:
         num_users: Any = 10,
         spawn_rate: Any = 1,
         run_time: Any = 60,
-    ) -> Any:
+    ) -> None:
         self.host = host
         self.num_users = num_users
         self.spawn_rate = spawn_rate

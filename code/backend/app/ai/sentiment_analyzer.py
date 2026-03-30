@@ -27,7 +27,7 @@ nltk.download("wordnet", quiet=True)
 
 class SentimentAnalyzer:
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize sentiment analysis model for market sentiment prediction
 

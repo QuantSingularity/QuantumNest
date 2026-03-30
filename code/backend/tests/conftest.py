@@ -437,7 +437,7 @@ class TestDataFactory:
 class MockResponse:
     """Mock HTTP response"""
 
-    def __init__(self, json_data: Any, status_code: Any) -> Any:
+    def __init__(self, json_data: Any, status_code: Any) -> None:
         self.json_data = json_data
         self.status_code = status_code
 

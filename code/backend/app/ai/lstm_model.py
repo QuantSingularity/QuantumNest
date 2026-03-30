@@ -13,7 +13,7 @@ from tensorflow.keras.models import Sequential
 
 class LSTMModel:
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize LSTM model for financial prediction
 

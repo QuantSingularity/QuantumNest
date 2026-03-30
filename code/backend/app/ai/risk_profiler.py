@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 
 class RiskProfiler:
 
-    def __init__(self, config: Any = None) -> Any:
+    def __init__(self, config: Any = None) -> None:
         """
         Initialize risk profiling system
 
