@@ -442,8 +442,8 @@ class RiskProfiler:
                     label=f"Profile {i + 1}: {self.config['profile_labels'][i]}",
                 )
         if self.pca is not None:
-            ax.set_xlabel(f"Principal Component 1")
-            ax.set_ylabel(f"Principal Component 2")
+            ax.set_xlabel("Principal Component 1")
+            ax.set_ylabel("Principal Component 2")
         else:
             ax.set_xlabel(self.feature_names[0])
             ax.set_ylabel(self.feature_names[1])

@@ -13,8 +13,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("QuantumNest Capital API Server Starting...")
     print("=" * 60)
-    print(f"Server running at: http://127.0.0.1:5000")
-    print(f"Health check: http://127.0.0.1:5000/health")
+    print("Server running at: http://127.0.0.1:5000")
+    print("Health check: http://127.0.0.1:5000/health")
     print("=" * 60 + "\n")
 
     app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)

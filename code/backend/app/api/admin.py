@@ -23,7 +23,7 @@ def admin_required(
 @router.get("/dashboard", dependencies=[Depends(admin_required)])
 def get_admin_dashboard(db: Session = Depends(get_db)) -> Any:
     total_users = db.query(models.User).count()
-    active_users = db.query(models.User).filter(models.User.is_active == True).count()
+    active_users = db.query(models.User).filter(models.User.is_active).count()
     total_portfolios = db.query(models.Portfolio).count()
     total_transactions = db.query(models.Transaction).count()
     dashboard_data = {

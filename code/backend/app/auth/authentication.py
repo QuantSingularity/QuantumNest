@@ -700,7 +700,7 @@ class AdvancedAuthenticationSystem:
                 self.db.query(LoginAttempt)
                 .filter(
                     LoginAttempt.user_id == user.id,
-                    LoginAttempt.success == False,
+                    not LoginAttempt.success,
                     LoginAttempt.timestamp > datetime.utcnow() - timedelta(hours=24),
                 )
                 .count()
@@ -748,7 +748,7 @@ class AdvancedAuthenticationSystem:
                 self.db.query(LoginAttempt)
                 .filter(
                     LoginAttempt.user_id == user_id,
-                    LoginAttempt.success == False,
+                    not LoginAttempt.success,
                     LoginAttempt.timestamp > datetime.utcnow() - self.lockout_duration,
                 )
                 .count()

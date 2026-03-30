@@ -586,7 +586,7 @@ class AdvancedPortfolioOptimizer:
             current_weights = None
             for rebalance_date in rebalance_dates:
                 try:
-                    end_data_date = rebalance_date - timedelta(days=1)
+                    rebalance_date - timedelta(days=1)
                     result = await self.optimize_portfolio(
                         assets, constraints, current_weights
                     )

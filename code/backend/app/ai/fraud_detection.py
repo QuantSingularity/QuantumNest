@@ -572,7 +572,7 @@ class AdvancedFraudDetectionSystem:
             early_stopping = EarlyStopping(
                 monitor="val_loss", patience=10, restore_best_weights=True
             )
-            history = model.fit(
+            model.fit(
                 X_train,
                 y_train,
                 validation_data=(X_test, y_test),
