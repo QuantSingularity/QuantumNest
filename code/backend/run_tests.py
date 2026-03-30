@@ -1,3 +1,5 @@
+from typing import Any
+
 """
 Test runner for QuantumNest Capital backend
 """
