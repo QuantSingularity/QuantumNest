@@ -10,10 +10,14 @@ from typing import Any, Dict, List
 import jwt
 import redis
 from app.core.config import get_settings
-from app.core.logging import get_logger
 from flask import Flask, g, jsonify, request
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 @dataclass

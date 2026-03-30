@@ -17,9 +17,14 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
-from core.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 nltk.download("punkt", quiet=True)
 nltk.download("stopwords", quiet=True)
 nltk.download("wordnet", quiet=True)

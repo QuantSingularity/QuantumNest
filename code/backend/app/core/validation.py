@@ -4,11 +4,15 @@ from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Union
 import email_validator
 import phonenumbers
-from app.core.logging import get_logger
 from phonenumbers import NumberParseException
 from pydantic import ValidationError, validator
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class ValidationError(Exception):

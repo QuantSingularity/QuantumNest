@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional, Union
 import bcrypt
 import pyotp
 from app.core.config import get_settings
-from app.core.logging import get_logger
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from cryptography.fernet import Fernet
@@ -19,8 +18,13 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class EncryptionMethod(str, Enum):

@@ -3,7 +3,6 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
-from app.core.logging import get_logger
 from app.models.models import (
     Asset,
     Portfolio,
@@ -16,8 +15,13 @@ from app.models.models import (
 from app.services.market_data_service import MarketDataService
 from app.services.risk_management_service import RiskManagementService
 from sqlalchemy.orm import Session
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class OrderType(str, Enum):

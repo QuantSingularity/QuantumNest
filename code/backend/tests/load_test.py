@@ -7,14 +7,17 @@ import sys
 import time
 import requests
 import uvicorn
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.main import app
-from core.logging import get_logger
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 HOST = "127.0.0.1"
 PORT = 8000
 

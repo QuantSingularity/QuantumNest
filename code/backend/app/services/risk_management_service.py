@@ -4,7 +4,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
-from app.core.logging import get_logger
 from app.models.models import (
     Asset,
     AssetType,
@@ -15,8 +14,13 @@ from app.models.models import (
 )
 from app.services.market_data_service import MarketDataService
 from sqlalchemy.orm import Session
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class RiskLevel(str, Enum):

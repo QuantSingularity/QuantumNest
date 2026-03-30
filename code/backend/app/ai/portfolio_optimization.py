@@ -8,12 +8,16 @@ import pandas as pd
 
 warnings.filterwarnings("ignore")
 import cvxpy as cp
-from app.core.logging import get_logger
 from app.services.market_data_service import MarketDataService
 from scipy.optimize import minimize
 from sklearn.covariance import LedoitWolf
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class OptimizationObjective(str, Enum):

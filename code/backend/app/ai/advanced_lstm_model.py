@@ -1,6 +1,7 @@
 import json
 import os
 import warnings
+import logging
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple
 import joblib
@@ -25,9 +26,12 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l1_l2
 
 warnings.filterwarnings("ignore")
-from app.core.logging import get_logger
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class AdvancedLSTMModel:

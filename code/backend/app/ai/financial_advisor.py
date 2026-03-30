@@ -8,11 +8,15 @@ warnings.filterwarnings("ignore")
 import os
 from app.ai.advanced_lstm_model import AdvancedLSTMModel
 from app.ai.portfolio_optimization import AdvancedPortfolioOptimizer
-from app.core.logging import get_logger
 from app.services.market_data_service import MarketDataService
 from openai import OpenAI
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class InvestmentGoal(str, Enum):

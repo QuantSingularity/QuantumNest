@@ -15,6 +15,15 @@ from app.utils.encryption import AdvancedEncryptionManager
 from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import time
+from contextlib import contextmanager
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
@@ -462,13 +471,6 @@ def mock_requests_post(url: Any, **kwargs) -> Any:
     if "api.example.com" in url:
         return MockResponse({"success": True}, 200)
     return MockResponse({"error": "Bad request"}, 400)
-
-
-import time
-from contextlib import contextmanager
-from core.logging import get_logger
-
-logger = get_logger(__name__)
 
 
 @contextmanager

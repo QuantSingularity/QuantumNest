@@ -12,12 +12,16 @@ import pyotp
 import qrcode
 import redis
 from app.core.config import get_settings
-from app.core.logging import get_logger
 from app.core.security import SecurityManager
 from app.models.models import LoginAttempt, User, UserSession
 from sqlalchemy.orm import Session
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class AuthenticationMethod(str, Enum):

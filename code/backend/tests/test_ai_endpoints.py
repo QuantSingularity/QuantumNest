@@ -6,11 +6,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.security import get_current_active_user
 from app.db.database import Base, get_db
 from app.main import app
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(

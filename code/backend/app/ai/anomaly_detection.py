@@ -9,7 +9,6 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 import joblib
 import tensorflow as tf
-from app.core.logging import get_logger
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import RobustScaler, StandardScaler
 from sklearn.svm import OneClassSVM
@@ -17,8 +16,13 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class AnomalyType(str, Enum):

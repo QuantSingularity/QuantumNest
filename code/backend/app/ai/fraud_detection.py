@@ -10,7 +10,6 @@ warnings.filterwarnings("ignore")
 import joblib
 import networkx as nx
 import tensorflow as tf
-from app.core.logging import get_logger
 from sklearn.ensemble import (
     GradientBoostingClassifier,
     IsolationForest,
@@ -23,8 +22,13 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
+import logging
 
-logger = get_logger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 class FraudType(str, Enum):
