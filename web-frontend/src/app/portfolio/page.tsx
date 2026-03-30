@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/Cards";
-import { LineChart, DoughnutChart } from "@/components/ui/Charts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { DoughnutChart, LineChart } from "@/components/ui/Charts";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/Table";
-import { Button } from "@/components/ui/Button";
-import { formatCurrency } from "@/lib/utils";
 import { useApi } from "@/lib/api";
 import { useBlockchain } from "@/lib/blockchain";
+import { formatCurrency } from "@/lib/utils";
 
 interface PortfolioAsset {
   id: string;
@@ -55,7 +55,7 @@ export default function Portfolio() {
     };
 
     fetchPortfolio();
-  }, [get]);
+  }, [get, getMockAssets]);
 
   const getMockAssets = (): PortfolioAsset[] => [
     {

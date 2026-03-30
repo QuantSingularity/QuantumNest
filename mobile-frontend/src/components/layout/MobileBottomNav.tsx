@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { Briefcase, LayoutDashboard, LineChart, Sparkles } from "lucide-react"; // Import Lucide icons
 import Link from "next/link";
-import { LayoutDashboard, Briefcase, LineChart, Sparkles } from "lucide-react"; // Import Lucide icons
+import { usePathname } from "next/navigation";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();

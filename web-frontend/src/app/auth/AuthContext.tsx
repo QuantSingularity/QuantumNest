@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import type React from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useApi } from "@/lib/api";
 
 interface AuthContextType {
@@ -119,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error(errorData.detail || "Registration failed");
       }
 
-      const userData = await response.json();
+      const _userData = await response.json();
 
       // After successful registration, log the user in
       await login(email, password);

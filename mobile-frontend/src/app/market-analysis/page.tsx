@@ -1,20 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-// Removed Navbar import as it's handled in layout.tsx
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
-import { AssetCard, StatCard } from "@/components/ui/Cards";
-import { LineChart, BarChart } from "@/components/ui/Charts";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { AssetCard, StatCard } from "@/components/ui/Cards";
+import { BarChart, LineChart } from "@/components/ui/Charts";
+// Removed Navbar import as it's handled in layout.tsx
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function MarketAnalysis() {
   const [activeTab, setActiveTab] = useState("overview");

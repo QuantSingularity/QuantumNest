@@ -1,14 +1,14 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-  useCallback,
-} from "react";
 import { ethers } from "ethers";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 // Extend Window interface for ethereum
 declare global {
@@ -117,7 +117,7 @@ export function BlockchainProvider({ children }: BlockchainProviderProps) {
       });
 
       // Listen for chain changes
-      window.ethereum.on("chainChanged", (newChainId: string) => {
+      window.ethereum.on("chainChanged", (_newChainId: string) => {
         // Reload the page as recommended by MetaMask
         window.location.reload();
       });

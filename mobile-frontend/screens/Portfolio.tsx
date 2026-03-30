@@ -1,26 +1,24 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl,
-  Alert,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import {
+  Dimensions,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { LineChart } from "react-native-chart-kit";
-import { Dimensions } from "react-native";
-import { Card } from "../components/Card";
-import { PortfolioAsset } from "../types/portfolio";
-import { fetchPortfolio, fetchPortfolioHistory } from "../services/api";
-import { formatCurrency } from "../utils/formatters";
-import { colors } from "../styles/colors";
-import { LoadingSpinner } from "../components/LoadingSpinner";
-import { ErrorMessage } from "../components/ErrorMessage";
-import { PortfolioSummary } from "../components/PortfolioSummary";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { AssetList } from "../components/AssetList";
+import { Card } from "../components/Card";
+import { ErrorMessage } from "../components/ErrorMessage";
+import { LoadingSpinner } from "../components/LoadingSpinner";
+import { PortfolioSummary } from "../components/PortfolioSummary";
+import { fetchPortfolio, fetchPortfolioHistory } from "../services/api";
+import { colors } from "../styles/colors";
+import type { PortfolioAsset } from "../types/portfolio";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -39,7 +37,7 @@ const Portfolio = () => {
 
   useEffect(() => {
     loadPortfolioData();
-  }, [timeRange]);
+  }, [loadPortfolioData]);
 
   const loadPortfolioData = async () => {
     try {

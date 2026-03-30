@@ -1,17 +1,16 @@
 "use client";
 
-import React from "react";
 import Navbar from "@/components/layout/Navbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/Cards";
-import { LineChart, DoughnutChart } from "@/components/ui/Charts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { DoughnutChart, LineChart } from "@/components/ui/Charts";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/Table";
 import { formatCurrency } from "@/lib/utils";
 

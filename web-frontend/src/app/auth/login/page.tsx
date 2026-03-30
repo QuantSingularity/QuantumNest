@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import type React from "react";
+import { useState } from "react";
 import { useAuth } from "@/app/auth/AuthContext";
+import { Button } from "@/components/ui/Button";
 
 export default function Login() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function Login() {
     try {
       await login(formData.email, formData.password);
       // Redirect is handled in the AuthContext after successful login
-    } catch (err) {
+    } catch (_err) {
       // Error handling is done in AuthContext
     }
   };

@@ -1,15 +1,15 @@
 "use client";
 
+import type { Web3Provider } from "@ethersproject/providers";
+import { InjectedConnector } from "@web3-react/injected-connector";
+import { ethers } from "ethers";
 import {
   createContext,
+  type ReactNode,
   useContext,
-  useState,
   useEffect,
-  ReactNode,
+  useState,
 } from "react";
-import { ethers } from "ethers";
-import { Web3Provider } from "@ethersproject/providers";
-import { InjectedConnector } from "@web3-react/injected-connector";
 
 // Contract ABIs would be imported here in a real application
 // import TokenizedAssetABI from '@/contracts/TokenizedAsset.json';
@@ -237,8 +237,7 @@ export function BlockchainProvider({ children }: BlockchainProviderProps) {
   useEffect(() => {
     const checkConnection = async () => {
       if (
-        (window as any).ethereum &&
-        (window as any).ethereum.isConnected &&
+        (window as any).ethereum?.isConnected &&
         (window as any).ethereum.selectedAddress
       ) {
         connectWallet();
@@ -260,7 +259,7 @@ export function BlockchainProvider({ children }: BlockchainProviderProps) {
         );
       }
     };
-  }, []);
+  }, [connectWallet, handleAccountsChanged, handleChainChanged]);
 
   const value = {
     account,

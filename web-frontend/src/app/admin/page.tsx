@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/Card";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Table } from "@/components/ui/Table";
 
 export default function Admin() {
-  const router = useRouter();
+  const _router = useRouter();
   const [activeTab, setActiveTab] = useState("users");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

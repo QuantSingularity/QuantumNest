@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { AssetCard, StatCard } from "@/components/ui/Cards";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { StatCard } from "@/components/ui/Cards";
 import { formatCurrency } from "@/lib/utils";
 
 export default function Recommendations() {

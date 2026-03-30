@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
+import type React from "react";
 import { ApiProvider, useApi } from "../api";
-import React from "react";
 
 global.fetch = jest.fn();
 

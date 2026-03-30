@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import Navbar from "@/components/layout/Navbar";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { useApi } from "@/lib/api";
 import { useBlockchain } from "@/lib/blockchain";
-import { Button } from "@/components/ui/Button";
-import Navbar from "@/components/layout/Navbar";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 
 export default function Home() {
   const { get, isLoading: apiLoading } = useApi();
@@ -26,7 +26,7 @@ export default function Home() {
       try {
         await get("/health");
         setApiStatus("connected");
-      } catch (error) {
+      } catch (_error) {
         setApiStatus("error");
         setApiError(
           "Could not connect to backend API. Please ensure the backend server is running.",

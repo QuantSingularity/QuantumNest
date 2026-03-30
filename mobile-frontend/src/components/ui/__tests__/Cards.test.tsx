@@ -1,6 +1,5 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
-import { StatCard, AssetCard, PortfolioCard } from "../Cards";
+import { AssetCard, PortfolioCard, StatCard } from "../Cards";
 
 describe("StatCard", () => {
   it("renders title and value", () => {

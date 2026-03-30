@@ -1,17 +1,16 @@
 "use client";
 
-import React from "react";
 // Removed Navbar import as it's handled in layout.tsx
 import { StatCard } from "@/components/ui/Cards"; // Assuming Cards.tsx exports StatCard
-import { LineChart, DoughnutChart } from "@/components/ui/Charts"; // Assuming Charts.tsx exports these
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { DoughnutChart, LineChart } from "@/components/ui/Charts"; // Assuming Charts.tsx exports these
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 

@@ -1,14 +1,14 @@
 "use client";
 
-import { Fragment, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   Disclosure,
   Menu as HeadlessMenu,
   Transition,
 } from "@headlessui/react"; // Renamed Menu to HeadlessMenu to avoid conflict
-import { Menu as MenuIcon, X, Bell, Wallet, UserCircle } from "lucide-react"; // Use Lucide icons, import Menu as MenuIcon
+import { Bell, Menu as MenuIcon, UserCircle, Wallet, X } from "lucide-react"; // Use Lucide icons, import Menu as MenuIcon
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/button"; // Import shadcn Button
 import { cn } from "@/lib/utils"; // Utility for class names
 

@@ -1,21 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/Table";
-import { Button } from "@/components/ui/Button";
 import {
   formatCurrency,
-  shortenAddress,
   formatDateWithTime,
+  shortenAddress,
 } from "@/lib/utils";
 
 export default function BlockchainExplorer() {

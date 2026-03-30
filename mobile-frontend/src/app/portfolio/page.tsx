@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
-import { PortfolioCard } from "@/components/ui/Cards";
-import { DoughnutChart, LineChart } from "@/components/ui/Charts";
-import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/utils";
+import { useState } from "react";
 import PerformanceTab from "@/components/portfolio/PerformanceTab";
 import TransactionsTab from "@/components/portfolio/TransactionsTab";
+import { Button } from "@/components/ui/button";
+import { PortfolioCard } from "@/components/ui/Cards";
+import { DoughnutChart } from "@/components/ui/Charts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatCurrency } from "@/lib/utils";
 
 export default function Portfolio() {
   const [activeTab, setActiveTab] = useState("portfolios");

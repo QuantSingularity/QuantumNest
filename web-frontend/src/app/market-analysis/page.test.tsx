@@ -1,10 +1,10 @@
 import "@testing-library/jest-dom";
 import {
+  cleanup,
+  fireEvent,
   render,
   screen,
-  fireEvent,
   waitFor,
-  cleanup,
 } from "@testing-library/react";
 import { useRouter } from "next/navigation";
 import MarketAnalysis from "./page";

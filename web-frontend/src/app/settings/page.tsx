@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/Card";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { getSettings, updateSettings, validateSettings } from "@/lib/settings";
 
 interface SettingsState {

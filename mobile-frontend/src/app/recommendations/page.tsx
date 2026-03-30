@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AssetCard, StatCard } from "@/components/ui/Cards";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/ui/Cards";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 
 export default function Recommendations() {

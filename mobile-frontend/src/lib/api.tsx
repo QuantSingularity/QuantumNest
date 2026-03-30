@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 
 interface ApiContextType {
   apiUrl: string;
