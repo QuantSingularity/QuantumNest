@@ -3,10 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
+import logging
+
 import joblib
 import tensorflow as tf
 from sklearn.ensemble import IsolationForest
@@ -16,7 +19,6 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.optimizers import Adam
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

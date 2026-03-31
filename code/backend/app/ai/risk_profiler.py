@@ -1,6 +1,8 @@
-from typing import Any
 import json
+import logging
 import os
+from typing import Any
+
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +10,6 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

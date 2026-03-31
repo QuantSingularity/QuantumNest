@@ -1,14 +1,14 @@
-from typing import Any
 import json
 import logging
 import multiprocessing
 import os
 import sys
 import time
+from typing import Any
+
 import requests
 import uvicorn
 from app.main import app
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

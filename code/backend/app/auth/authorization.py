@@ -1,11 +1,12 @@
 import functools
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
+
 from app.models.models import Permission, Role, RolePermission, UserRole
 from sqlalchemy.orm import Session
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

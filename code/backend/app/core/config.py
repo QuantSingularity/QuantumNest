@@ -3,8 +3,9 @@ import secrets
 from enum import Enum
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
-from pydantic_settings import BaseSettings
+
 from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 class Environment(str, Enum):

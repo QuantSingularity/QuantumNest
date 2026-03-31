@@ -1,7 +1,9 @@
-from typing import Any
 import json
+import logging
 import os
 import re
+from typing import Any
+
 import joblib
 import nltk
 import numpy as np
@@ -17,7 +19,6 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

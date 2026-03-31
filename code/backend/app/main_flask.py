@@ -2,11 +2,12 @@ import os
 import traceback
 from datetime import datetime
 from typing import Any
+
 import redis
 from app.core.config import get_settings
 from app.core.logging import get_logger, setup_logging
-from app.middleware.security_middleware import SecurityConfig, SecurityMiddleware
 from app.db.flask_db import db
+from app.middleware.security_middleware import SecurityConfig, SecurityMiddleware
 
 # Conditional imports for services and AI modules
 try:

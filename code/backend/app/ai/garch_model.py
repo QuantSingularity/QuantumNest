@@ -1,10 +1,11 @@
-from typing import Any
 import json
+import logging
 import os
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from arch import arch_model
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

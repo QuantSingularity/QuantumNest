@@ -1,11 +1,13 @@
 import base64
 import json
+import logging
 import os
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
+
 import bcrypt
 import pyotp
 from app.core.config import get_settings
@@ -18,7 +20,6 @@ from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

@@ -1,8 +1,10 @@
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional
+
 from app.models.models import (
     Asset,
     Portfolio,
@@ -15,7 +17,6 @@ from app.models.models import (
 from app.services.market_data_service import MarketDataService
 from app.services.risk_management_service import RiskManagementService
 from sqlalchemy.orm import Session
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

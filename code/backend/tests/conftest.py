@@ -1,8 +1,12 @@
-from typing import Any
+import logging
 import os
 import tempfile
+import time
+from contextlib import contextmanager
 from datetime import datetime
+from typing import Any
 from unittest.mock import Mock, patch
+
 import pytest
 import redis
 from app.ai.fraud_detection import AdvancedFraudDetectionSystem
@@ -15,9 +19,6 @@ from app.utils.encryption import AdvancedEncryptionManager
 from flask import Flask
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import time
-from contextlib import contextmanager
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

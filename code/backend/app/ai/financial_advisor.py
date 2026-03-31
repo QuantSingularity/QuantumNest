@@ -5,12 +5,13 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 warnings.filterwarnings("ignore")
+import logging
 import os
+
 from app.ai.advanced_lstm_model import AdvancedLSTMModel
 from app.ai.portfolio_optimization import AdvancedPortfolioOptimizer
 from app.services.market_data_service import MarketDataService
 from openai import OpenAI
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

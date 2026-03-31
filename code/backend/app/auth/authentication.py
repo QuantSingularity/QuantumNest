@@ -1,11 +1,13 @@
 import base64
 import io
 import json
+import logging
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 import bcrypt
 import jwt
 import pyotp
@@ -15,7 +17,6 @@ from app.core.config import get_settings
 from app.core.security import SecurityManager
 from app.models.models import LoginAttempt, User, UserSession
 from sqlalchemy.orm import Session
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

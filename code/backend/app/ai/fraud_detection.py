@@ -3,10 +3,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
+import logging
+
 import joblib
 import networkx as nx
 import tensorflow as tf
@@ -22,7 +25,6 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

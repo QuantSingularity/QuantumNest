@@ -1,6 +1,7 @@
-from typing import Any
 import logging
 from datetime import datetime, timedelta
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from app.ai.lstm_model import LSTMModel

@@ -2,16 +2,17 @@ import hashlib
 import hmac
 import ipaddress
 import json
+import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from functools import wraps
 from typing import Any, Dict, List
+
 import jwt
 import redis
 from app.core.config import get_settings
 from flask import Flask, g, jsonify, request
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

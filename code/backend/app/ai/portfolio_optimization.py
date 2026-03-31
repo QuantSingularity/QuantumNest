@@ -3,15 +3,17 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
+import logging
+
 import cvxpy as cp
 from app.services.market_data_service import MarketDataService
 from scipy.optimize import minimize
 from sklearn.covariance import LedoitWolf
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

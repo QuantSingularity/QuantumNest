@@ -1,12 +1,13 @@
+import logging
 import re
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Union
+
 import email_validator
 import phonenumbers
 from phonenumbers import NumberParseException
 from pydantic import ValidationError, validator
-import logging
 
 logging.basicConfig(
     level=logging.INFO,

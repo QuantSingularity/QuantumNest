@@ -1,13 +1,14 @@
 import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
+
 import aiohttp
 import pandas as pd
 import yfinance as yf
 from app.core.config import get_settings
-import logging
 
 logging.basicConfig(
     level=logging.INFO,
