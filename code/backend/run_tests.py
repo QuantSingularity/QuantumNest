@@ -1,14 +1,16 @@
-from typing import Any
-
 """
 Test runner for QuantumNest Capital backend
 """
 
 import argparse
+import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def run_command(command: Any, description: Any) -> Any:

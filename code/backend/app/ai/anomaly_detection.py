@@ -436,7 +436,7 @@ class FinancialAnomalyDetector:
                 residual_threshold = np.percentile(residuals, 95)
                 residual_scores = np.clip(residuals / residual_threshold, 0, 1)
                 scores = np.maximum(z_scores_normalized, residual_scores)
-            except:
+            except Exception:
                 scores = z_scores_normalized
         else:
             scores = z_scores_normalized

@@ -72,7 +72,7 @@ class TradingService:
         self.db = db
         self.market_data = MarketDataService()
         self.risk_manager = RiskManagementService(db)
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
         self.min_order_size = Decimal("0.01")
         self.max_order_size = Decimal("1000000")
         self.default_slippage = Decimal("0.001")
@@ -426,7 +426,7 @@ class AlgorithmicTradingService:
         self.db = db
         self.trading_service = TradingService(db)
         self.market_data = MarketDataService()
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
 
     async def execute_momentum_strategy(
         self,

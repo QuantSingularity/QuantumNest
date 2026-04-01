@@ -81,7 +81,7 @@ class RiskManagementService:
     def __init__(self, db: Session) -> None:
         self.db = db
         self.market_data = MarketDataService()
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
         self.max_position_size = Decimal("0.10")
         self.max_sector_concentration = Decimal("0.25")
         self.max_single_day_loss = Decimal("0.05")

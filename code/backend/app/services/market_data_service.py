@@ -52,7 +52,7 @@ class MarketDataService:
 
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
         self._cache = {}
         self._cache_timeout = 60
 
@@ -228,7 +228,7 @@ class MarketDataService:
                             "currency": info.get("currency", "USD"),
                         }
                     ]
-            except:
+            except Exception:
                 pass
             return []
         except Exception as e:
@@ -419,7 +419,7 @@ class RealTimeDataService:
     """Real-time market data streaming service"""
 
     def __init__(self) -> None:
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
         self.subscribers = {}
         self.is_running = False
 

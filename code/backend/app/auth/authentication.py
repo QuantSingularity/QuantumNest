@@ -80,7 +80,7 @@ class AdvancedAuthenticationSystem:
         self.db = db
         self.settings = get_settings()
         self.security_manager = SecurityManager()
-        self.logger = get_logger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.redis_client = redis.Redis(
             host=self.settings.REDIS_HOST,
             port=self.settings.REDIS_PORT,

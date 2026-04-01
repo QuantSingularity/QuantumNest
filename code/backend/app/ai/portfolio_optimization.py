@@ -560,7 +560,7 @@ class AdvancedPortfolioOptimizer:
                     market_caps[asset] = company_info["market_cap"]
                 else:
                     market_caps[asset] = 1.0
-            except:
+            except Exception:
                 market_caps[asset] = 1.0
         return market_caps
 

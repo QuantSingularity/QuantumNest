@@ -74,7 +74,7 @@ class AdvancedEncryptionManager:
 
     def __init__(self) -> None:
         self.settings = get_settings()
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
         self.keys = {}
         self.key_metadata = {}
         self.default_method = EncryptionMethod.AES_GCM
@@ -466,7 +466,7 @@ class PasswordManager:
     """Advanced password hashing and verification"""
 
     def __init__(self) -> None:
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
         self.bcrypt_rounds = 12
         self.scrypt_n = 2**14
         self.scrypt_r = 8
@@ -549,7 +549,7 @@ class PasswordManager:
         try:
             kdf.verify(password.encode("utf-8"), expected_key)
             return True
-        except:
+        except Exception:
             return False
 
     def _hash_pbkdf2(self, password: str) -> str:
@@ -583,7 +583,7 @@ class PasswordManager:
         try:
             kdf.verify(password.encode("utf-8"), expected_key)
             return True
-        except:
+        except Exception:
             return False
 
 
@@ -591,7 +591,7 @@ class TokenManager:
     """Secure token generation and management"""
 
     def __init__(self) -> None:
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
 
     def generate_secure_token(self, length: int = 32) -> str:
         """Generate cryptographically secure token"""
@@ -627,7 +627,7 @@ class DataMasking:
     """Data masking and anonymization utilities"""
 
     def __init__(self) -> None:
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
 
     def mask_email(self, email: str) -> str:
         """Mask email address"""
@@ -753,7 +753,7 @@ def decrypt_sensitive_data(encrypted_data: str) -> Union[str, Dict[str, Any]]:
         decrypted_str = decrypted_data.decode("utf-8")
         try:
             return json.loads(decrypted_str)
-        except:
+        except Exception:
             return decrypted_str
     except Exception as e:
         logger.error(f"Data decryption error: {str(e)}")

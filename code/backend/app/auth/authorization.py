@@ -83,7 +83,7 @@ class RoleBasedAccessControl:
 
     def __init__(self, db: Session) -> None:
         self.db = db
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
         self.permission_cache = {}
         self.cache_ttl = timedelta(minutes=15)
         self.last_cache_update = {}
@@ -633,7 +633,7 @@ class AttributeBasedAccessControl:
 
     def __init__(self, db: Session) -> None:
         self.db = db
-        self.logger = get_logger(__name__)
+        self.logger = logging.get_logger(__name__)
 
     def evaluate_policy(
         self,
