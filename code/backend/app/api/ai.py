@@ -29,7 +29,7 @@ async def get_ai_models(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """Get available AI models"""
     ai_models = db.query(models.AIModel).offset(skip).limit(limit).all()
@@ -40,7 +40,7 @@ async def get_ai_models(
 async def get_ai_model(
     model_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """Get specific AI model by ID"""
     db_model = db.query(models.AIModel).filter(models.AIModel.id == model_id).first()
@@ -56,7 +56,7 @@ async def get_predictions(
     model_id: Optional[int] = None,
     asset_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """Get AI predictions with optional filtering"""
     query = db.query(models.AIPrediction)
@@ -72,7 +72,7 @@ async def get_predictions(
 async def get_prediction(
     prediction_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """Get specific AI prediction by ID"""
     db_prediction = (
@@ -92,7 +92,7 @@ async def predict_asset_future(
     model_type: str = "lstm",
     background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     Predict future asset price asynchronously
@@ -109,7 +109,7 @@ async def predict_asset_future(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             "task_type": "asset_price_prediction",
             "parameters": {
                 "asset_symbol": asset_symbol,
@@ -138,7 +138,7 @@ async def predict_asset_future(
 
 @router.get("/tasks/{task_id}")
 async def get_task_status(
-    task_id: str, current_user: schemas.User = Depends(get_current_active_user)
+    task_id: str, current_user: models.User = Depends(get_current_active_user)
 ):
     """
     Check status of an asynchronous AI task
@@ -189,7 +189,7 @@ async def analyze_asset_sentiment(
     sources: Optional[List[str]] = None,
     background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     Analyze sentiment for an asset asynchronously
@@ -206,7 +206,7 @@ async def analyze_asset_sentiment(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             "task_type": "sentiment_analysis",
             "parameters": {"asset_symbol": asset_symbol, "sources": sources},
         }
@@ -237,7 +237,7 @@ async def optimize_user_portfolio(
     constraints: Optional[Dict[str, Any]] = None,
     background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     Optimize portfolio allocation asynchronously
@@ -267,7 +267,7 @@ async def optimize_user_portfolio(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             "task_type": "portfolio_optimization",
             "parameters": {
                 "portfolio_id": portfolio_id,
@@ -300,7 +300,7 @@ async def analyze_portfolio_risk_async(
     portfolio_id: int,
     background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     Analyze portfolio risk asynchronously
@@ -330,7 +330,7 @@ async def analyze_portfolio_risk_async(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             "task_type": "portfolio_risk_analysis",
             "parameters": {"portfolio_id": portfolio_id},
         }
@@ -358,7 +358,7 @@ async def analyze_portfolio_risk_async(
 async def get_market_recommendations_async(
     background_tasks: BackgroundTasks = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     Generate market recommendations asynchronously
@@ -375,7 +375,7 @@ async def get_market_recommendations_async(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
             "task_type": "market_recommendations",
             "parameters": {},
         }
@@ -404,7 +404,7 @@ async def get_market_recommendations_async(
 async def get_portfolio_recommendations_legacy(
     portfolio_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     DEPRECATED: Get portfolio recommendations synchronously
@@ -426,7 +426,7 @@ async def get_portfolio_recommendations_legacy(
     # For now, return mock data
     recommendations = {
         "portfolio_id": portfolio_id,
-        "timestamp": datetime.now(),
+        "timestamp": datetime.utcnow(),
         "rebalance_recommendations": [
             {
                 "asset_symbol": "AAPL",
@@ -490,7 +490,7 @@ async def get_portfolio_recommendations_legacy(
 @router.get("/recommendations/market", deprecated=True)
 async def get_market_recommendations_legacy(
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     DEPRECATED: Get market recommendations synchronously
@@ -499,7 +499,7 @@ async def get_market_recommendations_legacy(
     # This would be implemented with actual AI market recommendation logic
     # For now, return mock data
     recommendations = {
-        "timestamp": datetime.now(),
+        "timestamp": datetime.utcnow(),
         "market_outlook": {
             "short_term": "bullish",
             "medium_term": "neutral",
@@ -584,7 +584,7 @@ async def get_market_recommendations_legacy(
 async def get_asset_sentiment_legacy(
     asset_symbol: str,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     DEPRECATED: Get asset sentiment analysis synchronously
@@ -594,7 +594,7 @@ async def get_asset_sentiment_legacy(
     # For now, return mock data
     sentiment = {
         "asset_symbol": asset_symbol,
-        "timestamp": datetime.now(),
+        "timestamp": datetime.utcnow(),
         "overall_sentiment": {
             "score": 72,  # 0-100, higher is more positive
             "label": "bullish",
@@ -640,7 +640,7 @@ async def get_asset_sentiment_legacy(
 async def get_portfolio_risk_analysis_legacy(
     portfolio_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ):
     """
     DEPRECATED: Get portfolio risk analysis synchronously
@@ -662,7 +662,7 @@ async def get_portfolio_risk_analysis_legacy(
     # For now, return mock data
     risk_analysis = {
         "portfolio_id": portfolio_id,
-        "timestamp": datetime.now(),
+        "timestamp": datetime.utcnow(),
         "overall_risk_score": 65,  # 0-100, higher is riskier
         "risk_metrics": {
             "volatility": 12.5,

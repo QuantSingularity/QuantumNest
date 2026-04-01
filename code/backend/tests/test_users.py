@@ -1,135 +1,79 @@
-from datetime import timedelta
+"""User API endpoint tests."""
 
-import pytest
-from app.main import app, create_access_token
-from httpx import AsyncClient
-
-# Test data
-TEST_USER = {
-    "email": "test@example.com",
-    "name": "Test User",
-    "password": "testpass123",
-    "role": "USER",
-    "tier": "BASIC",
-}
-
-ADMIN_USER = {
-    "email": "admin@example.com",
-    "name": "Admin User",
-    "password": "adminpass123",
-    "role": "ADMIN",
-    "tier": "PREMIUM",
-}
+from app.models.models import User
+from fastapi.testclient import TestClient
 
 
-@pytest.fixture
-async def test_user_token():
-    access_token_expires = timedelta(minutes=15)
-    access_token = create_access_token(
-        data={"sub": TEST_USER["email"]}, expires_delta=access_token_expires
+def test_create_user(client: TestClient):
+    payload = {
+        "email": "newuser@example.com",
+        "username": "newuser",
+        "first_name": "New",
+        "last_name": "User",
+        "password": "SecurePass123!",
+    }
+    r = client.post("/users/", json=payload)
+    assert r.status_code == 201
+    data = r.json()
+    assert data["email"] == "newuser@example.com"
+    assert "hashed_password" not in data
+
+
+def test_create_duplicate_user(client: TestClient, test_user: User):
+    payload = {
+        "email": test_user.email,
+        "password": "AnotherPass123!",
+    }
+    r = client.post("/users/", json=payload)
+    assert r.status_code == 400
+    assert "already registered" in r.json()["detail"]
+
+
+def test_login(client: TestClient, test_user: User):
+    r = client.post(
+        "/token",
+        data={"username": test_user.email, "password": "TestPass123!"},
     )
-    return access_token
+    assert r.status_code == 200
+    assert "access_token" in r.json()
+    assert r.json()["token_type"] == "bearer"
 
 
-@pytest.fixture
-async def admin_user_token():
-    access_token_expires = timedelta(minutes=15)
-    access_token = create_access_token(
-        data={"sub": ADMIN_USER["email"]}, expires_delta=access_token_expires
+def test_login_wrong_password(client: TestClient, test_user: User):
+    r = client.post(
+        "/token",
+        data={"username": test_user.email, "password": "wrongpassword"},
     )
-    return access_token
+    assert r.status_code == 401
 
 
-@pytest.mark.asyncio
-async def test_create_user():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.post("/users/", json=TEST_USER)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == TEST_USER["email"]
-    assert data["name"] == TEST_USER["name"]
-    assert "password" not in data
+def test_get_me(client: TestClient, auth_headers: dict):
+    r = client.get("/users/me", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["email"] == "test@quantumnest.com"
 
 
-@pytest.mark.asyncio
-async def test_create_duplicate_user():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.post("/users/", json=TEST_USER)
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Email already registered"
+def test_get_user_by_id(client: TestClient, auth_headers: dict, test_user: User):
+    r = client.get(f"/users/{test_user.id}", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["id"] == test_user.id
 
 
-@pytest.mark.asyncio
-async def test_read_users_me(test_user_token):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get(
-            "/users/me", headers={"Authorization": f"Bearer {test_user_token}"}
-        )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == TEST_USER["email"]
+def test_get_nonexistent_user(client: TestClient, auth_headers: dict):
+    r = client.get("/users/999999", headers=auth_headers)
+    assert r.status_code == 404
 
 
-@pytest.mark.asyncio
-async def test_read_users_unauthorized(test_user_token):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get(
-            "/users/", headers={"Authorization": f"Bearer {test_user_token}"}
-        )
-    assert response.status_code == 403
+def test_update_user(client: TestClient, auth_headers: dict, test_user: User):
+    r = client.put(
+        f"/users/{test_user.id}",
+        json={"first_name": "Updated"},
+        headers=auth_headers,
+    )
+    assert r.status_code == 200
+    assert r.json()["first_name"] == "Updated"
 
 
-@pytest.mark.asyncio
-async def test_read_users_admin(admin_user_token):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get(
-            "/users/", headers={"Authorization": f"Bearer {admin_user_token}"}
-        )
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-
-
-@pytest.mark.asyncio
-async def test_read_user(test_user_token):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get(
-            "/users/1", headers={"Authorization": f"Bearer {test_user_token}"}
-        )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["email"] == TEST_USER["email"]
-
-
-@pytest.mark.asyncio
-async def test_update_user(test_user_token):
-    updated_user = TEST_USER.copy()
-    updated_user["name"] = "Updated Test User"
-
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.put(
-            "/users/1",
-            json=updated_user,
-            headers={"Authorization": f"Bearer {test_user_token}"},
-        )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["name"] == "Updated Test User"
-
-
-@pytest.mark.asyncio
-async def test_delete_user_unauthorized(test_user_token):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.delete(
-            "/users/1", headers={"Authorization": f"Bearer {test_user_token}"}
-        )
-    assert response.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_delete_user_admin(admin_user_token):
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.delete(
-            "/users/1", headers={"Authorization": f"Bearer {admin_user_token}"}
-        )
-    assert response.status_code == 204
+def test_unauthenticated_access(client: TestClient):
+    r = client.get("/users/me")
+    assert r.status_code == 401

@@ -465,7 +465,7 @@ class ComplianceValidator:
             rapid_transactions = [
                 t
                 for t in transaction_history
-                if (datetime.now() - t["timestamp"]).total_seconds() < 3600
+                if (datetime.utcnow() - t["timestamp"]).total_seconds() < 3600
             ]
             if len(rapid_transactions) > 5:
                 result.add_error(

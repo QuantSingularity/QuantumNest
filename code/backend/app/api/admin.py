@@ -1,20 +1,20 @@
 from datetime import datetime, timedelta
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from app.db.database import get_db
 from app.main import get_current_active_user
 from app.models import models
 from app.schemas import schemas
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
 def admin_required(
-    current_user: schemas.User = Depends(get_current_active_user),
-) -> Any:
-    if current_user.role != models.UserRole.ADMIN:
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if str(current_user.role) not in ("admin", "UserRole.ADMIN"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required"
         )
@@ -24,11 +24,11 @@ def admin_required(
 @router.get("/dashboard", dependencies=[Depends(admin_required)])
 def get_admin_dashboard(db: Session = Depends(get_db)) -> Any:
     total_users = db.query(models.User).count()
-    active_users = db.query(models.User).filter(models.User.is_active).count()
+    active_users = db.query(models.User).filter(models.User.is_active == True).count()
     total_portfolios = db.query(models.Portfolio).count()
     total_transactions = db.query(models.Transaction).count()
     dashboard_data = {
-        "timestamp": datetime.now(),
+        "timestamp": datetime.utcnow().isoformat(),
         "user_stats": {
             "total_users": total_users,
             "active_users": active_users,
@@ -78,110 +78,81 @@ def get_admin_dashboard(db: Session = Depends(get_db)) -> Any:
         },
         "alerts": [
             {
-                "level": "warning",
-                "message": "High API usage detected in the last hour",
-                "timestamp": datetime.now() - timedelta(minutes=30),
-            },
-            {
-                "level": "info",
-                "message": "Database backup completed successfully",
-                "timestamp": datetime.now() - timedelta(hours=2),
-            },
-            {
-                "level": "critical",
-                "message": "Multiple failed login attempts from IP 192.168.1.105",
-                "timestamp": datetime.now() - timedelta(days=1),
-            },
+                "id": 1,
+                "type": "warning",
+                "message": "High API usage detected",
+                "timestamp": datetime.utcnow().isoformat(),
+            }
         ],
     }
     return dashboard_data
 
 
-@router.get(
-    "/users", response_model=List[schemas.User], dependencies=[Depends(admin_required)]
-)
+@router.get("/users", dependencies=[Depends(admin_required)])
 def get_all_users(
-    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
-) -> Any:
-    users = db.query(models.User).offset(skip).limit(limit).all()
-    return users
-
-
-@router.put("/users/{user_id}/activate", dependencies=[Depends(admin_required)])
-def activate_user(user_id: int, db: Session = Depends(get_db)) -> Any:
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    db_user.is_active = True
-    db.commit()
-    db.refresh(db_user)
-    return {"message": f"User {user_id} activated successfully"}
-
-
-@router.put("/users/{user_id}/deactivate", dependencies=[Depends(admin_required)])
-def deactivate_user(user_id: int, db: Session = Depends(get_db)) -> Any:
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    db_user.is_active = False
-    db.commit()
-    db.refresh(db_user)
-    return {"message": f"User {user_id} deactivated successfully"}
-
-
-@router.put("/users/{user_id}/change-tier", dependencies=[Depends(admin_required)])
-def change_user_tier(
-    user_id: int, tier_data: dict, db: Session = Depends(get_db)
-) -> Any:
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    new_tier = tier_data.get("tier")
-    if new_tier not in [tier.value for tier in models.UserTier]:
-        raise HTTPException(status_code=400, detail="Invalid tier value")
-    db_user.tier = new_tier
-    db.commit()
-    db.refresh(db_user)
-    return {"message": f"User {user_id} tier changed to {new_tier} successfully"}
-
-
-@router.get("/transactions", dependencies=[Depends(admin_required)])
-def get_all_transactions(
     skip: int = 0,
     limit: int = 100,
-    status: Optional[str] = None,
+    role: Optional[str] = None,
+    is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
 ) -> Any:
-    query = db.query(models.Transaction)
-    if status:
-        query = query.filter(models.Transaction.status == status)
-    transactions = query.offset(skip).limit(limit).all()
-    return transactions
-
-
-@router.put(
-    "/transactions/{transaction_id}/update-status",
-    dependencies=[Depends(admin_required)],
-)
-def update_transaction_status(
-    transaction_id: int, status_data: dict, db: Session = Depends(get_db)
-) -> Any:
-    db_transaction = (
-        db.query(models.Transaction)
-        .filter(models.Transaction.id == transaction_id)
-        .first()
-    )
-    if db_transaction is None:
-        raise HTTPException(status_code=404, detail="Transaction not found")
-    new_status = status_data.get("status")
-    if new_status not in [status.value for status in models.TransactionStatus]:
-        raise HTTPException(status_code=400, detail="Invalid status value")
-    db_transaction.status = new_status
-    db.commit()
-    db.refresh(db_transaction)
+    query = db.query(models.User)
+    if role:
+        query = query.filter(models.User.role == role)
+    if is_active is not None:
+        query = query.filter(models.User.is_active == is_active)
+    users = query.offset(skip).limit(limit).all()
     return {
-        "message": f"Transaction {transaction_id} status updated to {new_status} successfully"
+        "total": query.count(),
+        "data": [
+            {
+                "id": u.id,
+                "email": u.email,
+                "username": u.username,
+                "role": str(u.role),
+                "tier": str(u.tier),
+                "is_active": u.is_active,
+                "created_at": u.created_at.isoformat() if u.created_at else None,
+                "last_login": u.last_login.isoformat() if u.last_login else None,
+            }
+            for u in users
+        ],
     }
+
+
+@router.put("/users/{user_id}/status", dependencies=[Depends(admin_required)])
+def update_user_status(
+    user_id: int,
+    is_active: bool,
+    db: Session = Depends(get_db),
+) -> Any:
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_active = is_active
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    return {"message": f"User {user_id} status updated", "is_active": is_active}
+
+
+@router.put("/users/{user_id}/role", dependencies=[Depends(admin_required)])
+def update_user_role(
+    user_id: int,
+    role: str,
+    db: Session = Depends(get_db),
+) -> Any:
+    valid_roles = [r.value for r in models.UserRole]
+    if role not in valid_roles:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid role. Must be one of: {valid_roles}"
+        )
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.role = role
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    return {"message": f"User {user_id} role updated to {role}"}
 
 
 @router.get("/system/logs", dependencies=[Depends(admin_required)])
@@ -194,7 +165,7 @@ def get_system_logs(
 ) -> Any:
     query = db.query(models.SystemLog)
     if log_level:
-        query = query.filter(models.SystemLog.log_level == log_level)
+        query = query.filter(models.SystemLog.log_level == log_level.upper())
     if component:
         query = query.filter(models.SystemLog.component == component)
     logs = (
@@ -211,7 +182,11 @@ def create_system_log(
     log: schemas.SystemLogCreate, db: Session = Depends(get_db)
 ) -> Any:
     db_log = models.SystemLog(
-        log_level=log.log_level, component=log.component, message=log.message
+        log_level=log.log_level.upper(),
+        component=log.component,
+        message=log.message,
+        request_id=log.request_id,
+        user_id=log.user_id,
     )
     db.add(db_log)
     db.commit()
@@ -221,11 +196,20 @@ def create_system_log(
 
 @router.get("/system/performance", dependencies=[Depends(admin_required)])
 def get_system_performance() -> Any:
-    performance_data = {
-        "timestamp": datetime.now(),
-        "cpu_usage": 35.2,
-        "memory_usage": 42.8,
-        "disk_usage": 68.5,
+    try:
+        import psutil
+
+        cpu = psutil.cpu_percent(interval=1)
+        mem = psutil.virtual_memory().percent
+        disk = psutil.disk_usage("/").percent
+    except ImportError:
+        cpu, mem, disk = 35.2, 42.8, 68.5
+
+    return {
+        "timestamp": datetime.utcnow().isoformat(),
+        "cpu_usage": cpu,
+        "memory_usage": mem,
+        "disk_usage": disk,
         "network": {"incoming": 25.6, "outgoing": 18.2},
         "database": {
             "connections": 45,
@@ -237,15 +221,7 @@ def get_system_performance() -> Any:
             "average_response_time": 120,
             "error_rate": 0.05,
         },
-        "endpoints": [
-            {"path": "/users", "requests": 45, "avg_time": 85},
-            {"path": "/portfolio", "requests": 120, "avg_time": 150},
-            {"path": "/market", "requests": 85, "avg_time": 110},
-            {"path": "/ai", "requests": 35, "avg_time": 180},
-            {"path": "/blockchain", "requests": 25, "avg_time": 200},
-        ],
     }
-    return performance_data
 
 
 @router.post("/system/backup", dependencies=[Depends(admin_required)])
@@ -253,18 +229,18 @@ def trigger_system_backup() -> Any:
     return {
         "status": "success",
         "message": "System backup initiated",
-        "backup_id": "bkp-" + datetime.now().strftime("%Y%m%d-%H%M%S"),
-        "timestamp": datetime.now(),
-        "estimated_completion_time": datetime.now() + timedelta(minutes=15),
+        "backup_id": "bkp-" + datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
+        "timestamp": datetime.utcnow().isoformat(),
+        "estimated_completion_minutes": 15,
     }
 
 
 @router.get("/analytics/user-activity", dependencies=[Depends(admin_required)])
-def get_user_activity_analytics(days: int = 30) -> Any:
+def get_user_activity_analytics(days: int = Query(30, ge=1, le=365)) -> Any:
     return {
         "period": f"Last {days} days",
         "total_active_users": 320,
-        "average_session_duration": 18.5,
+        "average_session_duration_minutes": 18.5,
         "average_sessions_per_user": 5.2,
         "most_active_times": [
             {"hour": 9, "activity": 85},
@@ -273,11 +249,11 @@ def get_user_activity_analytics(days: int = 30) -> Any:
             {"hour": 20, "activity": 78},
         ],
         "most_used_features": [
-            {"feature": "Portfolio View", "usage": 35},
-            {"feature": "Market Analysis", "usage": 25},
-            {"feature": "AI Recommendations", "usage": 20},
-            {"feature": "Transactions", "usage": 15},
-            {"feature": "Blockchain Explorer", "usage": 5},
+            {"feature": "Portfolio View", "usage_percent": 35},
+            {"feature": "Market Analysis", "usage_percent": 25},
+            {"feature": "AI Recommendations", "usage_percent": 20},
+            {"feature": "Transactions", "usage_percent": 15},
+            {"feature": "Blockchain Explorer", "usage_percent": 5},
         ],
         "user_retention": {"day1": 95, "day7": 85, "day30": 72},
     }
@@ -285,13 +261,13 @@ def get_user_activity_analytics(days: int = 30) -> Any:
 
 @router.post("/announcements", dependencies=[Depends(admin_required)])
 def create_announcement(announcement_data: dict) -> Any:
+    expiry_days = int(announcement_data.get("expiry_days", 7))
     return {
         "status": "success",
-        "announcement_id": "ann-" + datetime.now().strftime("%Y%m%d-%H%M%S"),
+        "announcement_id": "ann-" + datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
         "title": announcement_data.get("title"),
         "message": announcement_data.get("message"),
         "target_users": announcement_data.get("target_users", "all"),
-        "publish_time": datetime.now(),
-        "expiry_time": datetime.now()
-        + timedelta(days=int(announcement_data.get("expiry_days", 7))),
+        "publish_time": datetime.utcnow().isoformat(),
+        "expiry_time": (datetime.utcnow() + timedelta(days=expiry_days)).isoformat(),
     }

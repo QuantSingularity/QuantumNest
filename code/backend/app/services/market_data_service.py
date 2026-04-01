@@ -100,7 +100,7 @@ class MarketDataService:
             if self._is_cached(cache_key, timeout=300):
                 return self._cache[cache_key]["data"]
             ticker = yf.Ticker(symbol)
-            end_date = datetime.now()
+            end_date = datetime.utcnow()
             start_date = end_date - timedelta(days=days)
             hist = ticker.history(start=start_date, end=end_date, interval=interval)
             if hist.empty:
@@ -363,7 +363,7 @@ class MarketDataService:
                 change=Decimal(str(change)),
                 change_percent=Decimal(str(change_percent)),
                 volume=info.get("volume", 0),
-                timestamp=datetime.now(),
+                timestamp=datetime.utcnow(),
                 bid=Decimal(str(info["bid"])) if info.get("bid") else None,
                 ask=Decimal(str(info["ask"])) if info.get("ask") else None,
                 bid_size=info.get("bidSize"),
@@ -402,12 +402,12 @@ class MarketDataService:
         if key not in self._cache:
             return False
         cache_timeout = timeout or self._cache_timeout
-        age = (datetime.now() - self._cache[key]["timestamp"]).total_seconds()
+        age = (datetime.utcnow() - self._cache[key]["timestamp"]).total_seconds()
         return age < cache_timeout
 
     def _cache_data(self, key: str, data: Any, timeout: int = None) -> Any:
         """Cache data with timestamp"""
-        self._cache[key] = {"data": data, "timestamp": datetime.now()}
+        self._cache[key] = {"data": data, "timestamp": datetime.utcnow()}
 
     def clear_cache(self) -> Any:
         """Clear all cached data"""

@@ -221,7 +221,7 @@ class AIRecommendationEngine:
                 "predicted_return": float(prediction),
                 "confidence": float(confidence),
                 "time_horizon": f"{self.config['prediction_horizon']} days",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.utcnow().isoformat(),
             }
             if all((f in features.columns for f in self.config["features"])):
                 item["features"] = {
@@ -231,7 +231,7 @@ class AIRecommendationEngine:
             items.append(item)
         items.sort(key=lambda x: abs(x["predicted_return"]), reverse=True)
         recommendations = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.utcnow().isoformat(),
             "prediction_horizon": self.config["prediction_horizon"],
             "model_type": self.config["model_type"],
             "recommendations": items,
@@ -261,7 +261,7 @@ class AIRecommendationEngine:
         else:
             outlook = "neutral"
         confidence = min(abs(avg_prediction) * 15, 1.0) * 100
-        today = datetime.now()
+        today = datetime.utcnow()
         forecast_dates = [
             (today + timedelta(days=7)).strftime("%Y-%m-%d"),
             (today + timedelta(days=14)).strftime("%Y-%m-%d"),

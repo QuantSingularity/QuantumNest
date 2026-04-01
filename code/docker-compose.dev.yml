@@ -1,0 +1,32 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Development overrides  –  use with:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# ─────────────────────────────────────────────────────────────────────────────
+version: "3.9"
+
+services:
+  backend:
+    build:
+      target: builder # use builder stage so we can mount source live
+    command: >
+      uvicorn app.main:app
+        --host 0.0.0.0
+        --port 8000
+        --reload
+        --log-level debug
+    environment:
+      ENVIRONMENT: development
+      DEBUG: "true"
+      WORKERS: "1"
+    volumes:
+      - ./backend:/app # live-reload: mount source over the image copy
+    ports:
+      - "8000:8000"
+
+  db:
+    ports:
+      - "5432:5432" # expose to host in dev
+
+  redis:
+    ports:
+      - "6379:6379"

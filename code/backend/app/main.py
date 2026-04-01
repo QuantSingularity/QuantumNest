@@ -1,7 +1,9 @@
+import os
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
-from app.db.database import get_db
+from app.db.database import get_db, init_db
 from app.models import models
 from app.schemas import schemas
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -11,23 +13,37 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7",
+)
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
 app = FastAPI(
     title="QuantumNest Capital API",
-    description="Backend API for QuantumNest Capital platform",
-    version="0.1.0",
+    description="Advanced Financial Platform with AI-Powered Analytics",
+    version="1.0.0",
+    lifespan=lifespan,
 )
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -85,7 +101,7 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: schemas.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
@@ -107,20 +123,33 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    }
 
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to QuantumNest Capital API"}
+    return {
+        "message": "Welcome to QuantumNest Capital API",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/health",
+    }
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.0.0",
+    }
 
 
-from app.api import admin, ai, blockchain, market, portfolio, users
+from app.api import admin, ai, blockchain, market, portfolio, users  # noqa: E402
 
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(portfolio.router, prefix="/portfolio", tags=["portfolio"])
@@ -128,7 +157,13 @@ app.include_router(market.router, prefix="/market", tags=["market"])
 app.include_router(ai.router, prefix="/ai", tags=["ai"])
 app.include_router(blockchain.router, prefix="/blockchain", tags=["blockchain"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
+
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "app.main:app",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", "8000")),
+        reload=os.getenv("ENVIRONMENT", "development") == "development",
+    )

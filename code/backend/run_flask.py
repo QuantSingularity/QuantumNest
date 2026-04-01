@@ -1,20 +1,29 @@
-"""Run Flask application"""
+"""Development entry-point for the FastAPI application."""
 
 import os
 
-# Set environment variables for testing
-os.environ["DATABASE_URL"] = "sqlite:///./quantumnest.db"
-os.environ["SECRET_KEY"] = "test-secret-key-min-32-characters-long-for-security"
-
-from app.main_flask import create_app
+# Must be set before importing the app so Settings picks them up.
+os.environ.setdefault("DATABASE_URL", "sqlite:///./quantumnest.db")
+os.environ.setdefault(
+    "SECRET_KEY", "dev-secret-key-min-32-characters-long-for-security-only"
+)
+os.environ.setdefault("API_SECRET_KEY", "dev-api-secret-key-min-32-characters-here")
+os.environ.setdefault("ENVIRONMENT", "development")
 
 if __name__ == "__main__":
-    app = create_app()
+    import uvicorn
+
     print("\n" + "=" * 60)
-    print("QuantumNest Capital API Server Starting...")
+    print("QuantumNest Capital API – Development Server")
     print("=" * 60)
-    print("Server running at: http://127.0.0.1:5000")
-    print("Health check: http://127.0.0.1:5000/health")
+    print("Docs:   http://127.0.0.1:8000/docs")
+    print("Health: http://127.0.0.1:8000/health")
     print("=" * 60 + "\n")
 
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
+    uvicorn.run(
+        "app.main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+        log_level="debug",
+    )

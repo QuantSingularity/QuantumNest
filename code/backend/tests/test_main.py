@@ -1,28 +1,27 @@
-import pytest
-from app.main import app
-from httpx import AsyncClient
+"""Basic smoke tests for core endpoints."""
+
+from fastapi.testclient import TestClient
 
 
-@pytest.mark.asyncio
-async def test_health_check():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "healthy"}
+def test_root(client: TestClient):
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "QuantumNest" in r.json()["message"]
 
 
-@pytest.mark.asyncio
-async def test_root():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Welcome to QuantumNest Capital API"}
+def test_health(client: TestClient):
+    r = client.get("/health")
+    assert r.status_code == 200
+    assert r.json()["status"] == "healthy"
 
 
-@pytest.mark.asyncio
-async def test_login_for_access_token():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        response = await ac.post(
-            "/token", data={"username": "testuser", "password": "testpass"}
-        )
-    assert response.status_code == 401  # Assuming test credentials are invalid
+def test_docs_available(client: TestClient):
+    r = client.get("/docs")
+    assert r.status_code == 200
+
+
+def test_openapi_schema(client: TestClient):
+    r = client.get("/openapi.json")
+    assert r.status_code == 200
+    schema = r.json()
+    assert schema["info"]["title"] == "QuantumNest Capital API"

@@ -1,0 +1,162 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  QuantumNest Capital – Docker Compose
+#  Services: db · redis · backend · blockchain (optional)
+# ─────────────────────────────────────────────────────────────────────────────
+
+x-backend-env: &backend-env
+  ENVIRONMENT: ${ENVIRONMENT:-development}
+  DEBUG: ${DEBUG:-false}
+  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY must be set}
+  API_SECRET_KEY: ${API_SECRET_KEY:?API_SECRET_KEY must be set}
+  DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-quantumnest}
+  REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+  ETHEREUM_RPC_URL: http://blockchain:8545
+  HOST: 0.0.0.0
+  PORT: "8000"
+  WORKERS: ${WORKERS:-2}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY:-}
+  SENTRY_DSN: ${SENTRY_DSN:-}
+  PROMETHEUS_ENABLED: ${PROMETHEUS_ENABLED:-false}
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-quantumnest}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432" # bind to localhost only
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-quantumnest}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - qn_internal
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: >
+      redis-server
+        --save 60 1
+        --loglevel warning
+        ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qn_internal
+
+  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_models:/app/models
+      - backend_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - qn_internal
+      - qn_public
+
+  # ── Hardhat Blockchain Node (optional – dev/test only) ─────────────────────
+  blockchain:
+    build:
+      context: ./blockchain
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8545:8545"
+    healthcheck:
+      test: [
+          "CMD-SHELL",
+          "curl -sf -X POST -H 'Content-Type: application/json' \
+          --data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' \
+          http://localhost:8545 | grep -q result",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    networks:
+      - qn_internal
+    profiles:
+      - blockchain # only starts with: docker compose --profile blockchain up
+
+  # ── Database Migrations (one-shot job) ────────────────────────────────────
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    command:
+      [
+        "python",
+        "-c",
+        "from app.db.database import init_db; init_db(); print('DB initialised')",
+      ]
+    environment:
+      <<: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - qn_internal
+    profiles:
+      - migrate
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_uploads:
+  backend_models:
+  backend_logs:
+
+networks:
+  qn_internal:
+    driver: bridge
+    internal: true # no direct internet access for internal services
+  qn_public:
+    driver: bridge # only the backend is reachable from the outside

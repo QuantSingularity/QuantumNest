@@ -49,6 +49,7 @@ except ImportError as e:
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_migrate import Migrate
+from sqlalchemy import text
 from werkzeug.exceptions import HTTPException
 
 
@@ -235,7 +236,7 @@ def create_app(config_name: Any = "development") -> Any:
             "components": {},
         }
         try:
-            db.session.execute("SELECT 1")
+            db.session.execute(text("SELECT 1"))
             health_status["components"]["database"] = "healthy"
         except Exception as e:
             health_status["components"]["database"] = f"unhealthy: {str(e)}"

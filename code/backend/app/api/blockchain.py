@@ -5,7 +5,7 @@ from app.db.database import get_db
 from app.main import get_current_active_user
 from app.models import models
 from app.schemas import schemas
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 router = APIRouter()
@@ -17,20 +17,55 @@ def get_smart_contracts(
     limit: int = 100,
     contract_type: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
-    query = db.query(models.SmartContract)
+    query = db.query(models.SmartContract).filter(
+        models.SmartContract.is_active == True
+    )
     if contract_type:
         query = query.filter(models.SmartContract.contract_type == contract_type)
     contracts = query.offset(skip).limit(limit).all()
     return contracts
 
 
+@router.post(
+    "/contracts/",
+    response_model=schemas.SmartContract,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_smart_contract(
+    contract: schemas.SmartContractCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user),
+) -> Any:
+    existing = (
+        db.query(models.SmartContract)
+        .filter(models.SmartContract.address == contract.address)
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=409, detail="Contract with this address already exists"
+        )
+    db_contract = models.SmartContract(
+        address=contract.address,
+        name=contract.name,
+        contract_type=contract.contract_type,
+        network=contract.network,
+        abi=contract.abi,
+        bytecode=contract.bytecode,
+    )
+    db.add(db_contract)
+    db.commit()
+    db.refresh(db_contract)
+    return db_contract
+
+
 @router.get("/contracts/{contract_id}", response_model=schemas.SmartContract)
 def get_smart_contract(
     contract_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
     db_contract = (
         db.query(models.SmartContract)
@@ -47,13 +82,21 @@ def get_blockchain_transactions(
     skip: int = 0,
     limit: int = 100,
     contract_id: Optional[int] = None,
+    network: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
     query = db.query(models.BlockchainTransaction)
     if contract_id:
         query = query.filter(models.BlockchainTransaction.contract_id == contract_id)
-    transactions = query.offset(skip).limit(limit).all()
+    if network:
+        query = query.filter(models.BlockchainTransaction.network == network)
+    transactions = (
+        query.order_by(models.BlockchainTransaction.timestamp.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     return transactions
 
 
@@ -61,7 +104,7 @@ def get_blockchain_transactions(
 def get_blockchain_transaction(
     tx_hash: str,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
     db_transaction = (
         db.query(models.BlockchainTransaction)
@@ -76,113 +119,40 @@ def get_blockchain_transaction(
 @router.get("/wallet/{address}/balance")
 def get_wallet_balance(
     address: str,
+    network: str = "ethereum",
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
-    balance = {
+    if not address.startswith("0x") or len(address) != 42:
+        raise HTTPException(status_code=400, detail="Invalid Ethereum wallet address")
+    return {
         "address": address,
-        "timestamp": datetime.now(),
-        "balances": [
-            {"token": "ETH", "balance": 5.25, "value_usd": 15750.0},
-            {"token": "USDC", "balance": 10000.0, "value_usd": 10000.0},
-            {"token": "QNC", "balance": 5000.0, "value_usd": 25000.0},
-        ],
-        "total_value_usd": 50750.0,
+        "network": network,
+        "balances": {
+            "ETH": {"balance": 1.245, "value_usd": 3981.60},
+            "USDC": {"balance": 5000.0, "value_usd": 5000.0},
+            "USDT": {"balance": 2500.0, "value_usd": 2500.0},
+        },
+        "total_value_usd": 11481.60,
+        "timestamp": datetime.utcnow().isoformat(),
     }
-    return balance
-
-
-@router.get("/wallet/{address}/transactions")
-def get_wallet_transactions(
-    address: str,
-    skip: int = 0,
-    limit: int = 10,
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
-) -> Any:
-    transactions = [
-        {
-            "tx_hash": "0x7d2a5b3e8f4a1b9c6d8e7f0a2b3c4d5e6f7a8b9c",
-            "from": (
-                address
-                if address.startswith("0x")
-                else "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
-            ),
-            "to": "0x8901DaECbfF9e1d2c7b9C2a154b9dAc45a1B5092",
-            "value": "1.25 ETH",
-            "timestamp": "2025-04-09T10:30:00Z",
-            "status": "Confirmed",
-            "gas_used": 21000,
-            "gas_price": "25 Gwei",
-        },
-        {
-            "tx_hash": "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
-            "from": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
-            "to": (
-                address
-                if address.startswith("0x")
-                else "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
-            ),
-            "value": "0.75 ETH",
-            "timestamp": "2025-04-08T15:45:00Z",
-            "status": "Confirmed",
-            "gas_used": 21000,
-            "gas_price": "22 Gwei",
-        },
-        {
-            "tx_hash": "0x9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b",
-            "from": (
-                address
-                if address.startswith("0x")
-                else "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
-            ),
-            "to": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
-            "value": "2.50 ETH",
-            "timestamp": "2025-04-07T09:15:00Z",
-            "status": "Confirmed",
-            "gas_used": 21000,
-            "gas_price": "20 Gwei",
-        },
-    ]
-    return {"address": address, "transactions": transactions[skip : skip + limit]}
-
-
-@router.get("/network/stats")
-def get_network_stats(
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
-) -> Any:
-    network_stats = {
-        "timestamp": datetime.now(),
-        "network": "Ethereum Mainnet",
-        "current_block": 19250000,
-        "gas_price": {
-            "slow": "15 Gwei",
-            "standard": "20 Gwei",
-            "fast": "25 Gwei",
-            "rapid": "30 Gwei",
-        },
-        "network_hashrate": "1.2 PH/s",
-        "active_validators": 875000,
-        "pending_transactions": 125,
-        "average_block_time": 12.5,
-        "network_utilization": 65.2,
-    }
-    return network_stats
 
 
 @router.post("/deploy/contract")
 def deploy_smart_contract(
     contract_data: dict,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
-    if current_user.tier == models.UserTier.BASIC:
+    allowed_tiers = ["premium", "professional", "enterprise", "institutional"]
+    if str(current_user.tier) not in allowed_tiers and not any(
+        t in str(current_user.tier) for t in allowed_tiers
+    ):
         raise HTTPException(
-            status_code=403,
-            detail="Smart contract deployment requires Premium or Enterprise tier",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Smart contract deployment requires Premium tier or higher",
         )
-    deployment_result = {
+    return {
         "status": "success",
         "contract_name": contract_data.get("name", "Unnamed Contract"),
         "contract_type": contract_data.get("type", "Unknown"),
@@ -190,10 +160,9 @@ def deploy_smart_contract(
         "transaction_hash": "0x7d2a5b3e8f4a1b9c6d8e7f0a2b3c4d5e6f7a8b9c",
         "block_number": 19250050,
         "gas_used": 1250000,
-        "timestamp": datetime.now(),
-        "network": "Ethereum Goerli Testnet",
+        "timestamp": datetime.utcnow().isoformat(),
+        "network": contract_data.get("network", "Ethereum Testnet"),
     }
-    return deployment_result
 
 
 @router.post("/execute/contract/{contract_id}")
@@ -201,16 +170,19 @@ def execute_smart_contract(
     contract_id: int,
     function_data: dict,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
     db_contract = (
         db.query(models.SmartContract)
-        .filter(models.SmartContract.id == contract_id)
+        .filter(
+            models.SmartContract.id == contract_id,
+            models.SmartContract.is_active == True,
+        )
         .first()
     )
     if db_contract is None:
         raise HTTPException(status_code=404, detail="Smart contract not found")
-    execution_result = {
+    return {
         "status": "success",
         "contract_id": contract_id,
         "contract_address": db_contract.address,
@@ -218,18 +190,16 @@ def execute_smart_contract(
         "transaction_hash": "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
         "block_number": 19250055,
         "gas_used": 75000,
-        "timestamp": datetime.now(),
+        "timestamp": datetime.utcnow().isoformat(),
         "result": "Function executed successfully",
     }
-    return execution_result
 
 
 @router.get("/tokenization/assets")
 def get_tokenized_assets(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_active_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
     tokenized_assets = [
         {
@@ -269,4 +239,37 @@ def get_tokenized_assets(
             "market_cap": 18750.0,
         },
     ]
-    return tokenized_assets[skip : skip + limit]
+    return {
+        "total": len(tokenized_assets),
+        "data": tokenized_assets[skip : skip + limit],
+    }
+
+
+@router.get("/networks")
+def get_supported_networks(
+    current_user: models.User = Depends(get_current_active_user),
+) -> Any:
+    return {
+        "networks": [
+            {
+                "id": "ethereum",
+                "name": "Ethereum Mainnet",
+                "chain_id": 1,
+                "currency": "ETH",
+            },
+            {"id": "polygon", "name": "Polygon", "chain_id": 137, "currency": "MATIC"},
+            {"id": "bsc", "name": "BNB Smart Chain", "chain_id": 56, "currency": "BNB"},
+            {
+                "id": "arbitrum",
+                "name": "Arbitrum One",
+                "chain_id": 42161,
+                "currency": "ETH",
+            },
+            {
+                "id": "goerli",
+                "name": "Goerli Testnet",
+                "chain_id": 5,
+                "currency": "ETH",
+            },
+        ]
+    }

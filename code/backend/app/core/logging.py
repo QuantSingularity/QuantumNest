@@ -129,3 +129,13 @@ def get_logger(name: str) -> logging.Logger:
         Logger instance
     """
     return logging.getLogger(name)
+
+
+def performance_logger(name: str) -> logging.Logger:
+    """Get a performance logger instance"""
+    return logging.getLogger(f"performance.{name}")
+
+
+def security_logger(name: str) -> logging.Logger:
+    """Get a security logger instance"""
+    return logging.getLogger(f"security.{name}")

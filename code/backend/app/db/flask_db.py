@@ -1,6 +1,8 @@
-"""Flask-SQLAlchemy database instance"""
+"""Flask-SQLAlchemy database instance - kept for Flask app compatibility"""
 
-from flask_sqlalchemy import SQLAlchemy
+try:
+    from flask_sqlalchemy import SQLAlchemy
 
-# Create Flask-SQLAlchemy instance
-db = SQLAlchemy()
+    db = SQLAlchemy()
+except ImportError:
+    db = None

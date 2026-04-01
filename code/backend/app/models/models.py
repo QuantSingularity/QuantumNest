@@ -1,15 +1,11 @@
 import enum
 import uuid
 
-from app.db.flask_db import db
-
-Base = db.Model
 from sqlalchemy import (
     DECIMAL,
     JSON,
     BigInteger,
     Boolean,
-    CheckConstraint,
     Column,
     DateTime,
     Enum,
@@ -20,8 +16,11 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
+Base = declarative_base()
 
 
 # Enums
@@ -112,62 +111,50 @@ class User(Base):
     uuid = Column(String, unique=True, default=lambda: str(uuid.uuid4()), index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, unique=True, index=True)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
+    first_name = Column(String, nullable=False, default="")
+    last_name = Column(String, nullable=False, default="")
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
     tier = Column(Enum(UserTier), default=UserTier.BASIC, nullable=False)
-    status = Column(
-        Enum(UserStatus), default=UserStatus.PENDING_VERIFICATION, nullable=False
-    )
+    status = Column(Enum(UserStatus), default=UserStatus.ACTIVE, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
 
-    # Profile information
+    # Profile
     phone_number = Column(String)
     date_of_birth = Column(DateTime)
     country = Column(String)
     timezone = Column(String, default="UTC")
-    language = Column(String, default="en")
+    profile_picture_url = Column(String)
 
-    # Financial profile
-    risk_tolerance = Column(Enum(RiskLevel), default=RiskLevel.MODERATE)
-    investment_experience = Column(String)  # beginner, intermediate, advanced, expert
-    annual_income = Column(DECIMAL(15, 2))
-    net_worth = Column(DECIMAL(15, 2))
-    investment_goals = Column(JSON)
-
-    # Security settings
+    # Security
     two_factor_enabled = Column(Boolean, default=False)
     two_factor_secret = Column(String)
     last_login = Column(DateTime)
+    last_password_change = Column(DateTime)
     failed_login_attempts = Column(Integer, default=0)
-    account_locked_until = Column(DateTime)
-    password_changed_at = Column(DateTime, default=func.now())
+    locked_until = Column(DateTime)
 
-    # Compliance and verification
+    # Compliance
+    kyc_verified = Column(Boolean, default=False)
     kyc_status = Column(Enum(ComplianceStatus), default=ComplianceStatus.UNDER_REVIEW)
-    kyc_verified_at = Column(DateTime)
+    kyc_documents = Column(JSON)
     aml_status = Column(Enum(ComplianceStatus), default=ComplianceStatus.UNDER_REVIEW)
-    accredited_investor = Column(Boolean, default=False)
-
-    # Preferences
-    email_notifications = Column(Boolean, default=True)
-    sms_notifications = Column(Boolean, default=False)
-    push_notifications = Column(Boolean, default=True)
-    marketing_consent = Column(Boolean, default=False)
 
     # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    last_activity = Column(DateTime(timezone=True))
 
     # Relationships
     portfolios = relationship(
         "Portfolio", back_populates="owner", cascade="all, delete-orphan"
     )
     transactions = relationship("Transaction", back_populates="user")
-    alerts = relationship("Alert", back_populates="user")
-    api_keys = relationship("APIKey", back_populates="user")
     audit_logs = relationship("AuditLog", back_populates="user")
+    api_keys = relationship(
+        "APIKey", back_populates="user", cascade="all, delete-orphan"
+    )
+    login_attempts = relationship("LoginAttempt", back_populates="user")
+    sessions = relationship("UserSession", back_populates="user")
 
 
 class APIKey(Base):
@@ -175,10 +162,9 @@ class APIKey(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    key_hash = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
-    key_hash = Column(String, unique=True, nullable=False)
-    permissions = Column(JSON)  # List of allowed endpoints/actions
-    rate_limit = Column(Integer, default=1000)  # Requests per hour
+    permissions = Column(JSON, default=list)
     is_active = Column(Boolean, default=True)
     expires_at = Column(DateTime)
     last_used = Column(DateTime)
@@ -187,53 +173,82 @@ class APIKey(Base):
     user = relationship("User", back_populates="api_keys")
 
 
+class LoginAttempt(Base):
+    __tablename__ = "login_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    ip_address = Column(String)
+    user_agent = Column(String)
+    success = Column(Boolean, default=False)
+    failure_reason = Column(String)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    user = relationship("User", back_populates="login_attempts")
+
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    device_fingerprint = Column(String)
+    ip_address = Column(String)
+    user_agent = Column(String)
+    status = Column(String, default="active")
+    risk_score = Column(DECIMAL(5, 4), default=0.0)
+    location = Column(JSON)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_activity = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True))
+
+    user = relationship("User", back_populates="sessions")
+
+
 # Portfolio Model
 class Portfolio(Base):
     __tablename__ = "portfolios"
 
     id = Column(Integer, primary_key=True, index=True)
     uuid = Column(String, unique=True, default=lambda: str(uuid.uuid4()), index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(Text)
-    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Portfolio configuration
-    base_currency = Column(String, default="USD")
-    portfolio_type = Column(String)  # personal, managed, algorithmic, etc.
-    investment_strategy = Column(String)
     risk_level = Column(Enum(RiskLevel), default=RiskLevel.MODERATE)
+    investment_strategy = Column(String)
+    benchmark = Column(String, default="SPY")
+    base_currency = Column(String, default="USD")
+    target_allocation = Column(JSON)
+    rebalancing_frequency = Column(String, default="quarterly")
 
-    # Performance tracking
-    initial_value = Column(DECIMAL(15, 2), default=0)
-    current_value = Column(DECIMAL(15, 2), default=0)
-    total_return = Column(DECIMAL(15, 4), default=0)  # Percentage
-    total_return_amount = Column(DECIMAL(15, 2), default=0)
-    daily_return = Column(DECIMAL(15, 4), default=0)
-    volatility = Column(DECIMAL(15, 4), default=0)
-    sharpe_ratio = Column(DECIMAL(15, 4))
-    max_drawdown = Column(DECIMAL(15, 4))
+    # Portfolio metrics
+    total_value = Column(DECIMAL(15, 2), default=0)
+    total_cost = Column(DECIMAL(15, 2), default=0)
+    total_return = Column(DECIMAL(10, 4))
+    total_return_pct = Column(DECIMAL(10, 4))
+    daily_change = Column(DECIMAL(15, 2))
+    daily_change_pct = Column(DECIMAL(10, 4))
 
-    # Rebalancing settings
-    auto_rebalance = Column(Boolean, default=False)
-    rebalance_threshold = Column(DECIMAL(5, 2), default=5.0)  # Percentage
-    last_rebalanced = Column(DateTime)
-
-    # Status and metadata
+    # Status
     is_active = Column(Boolean, default=True)
     is_public = Column(Boolean, default=False)
-    benchmark_symbol = Column(String, default="SPY")
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # Relationships
     owner = relationship("User", back_populates="portfolios")
     assets = relationship(
         "PortfolioAsset", back_populates="portfolio", cascade="all, delete-orphan"
     )
     performance_history = relationship(
-        "PortfolioPerformance", back_populates="portfolio"
+        "PortfolioPerformance", back_populates="portfolio", cascade="all, delete-orphan"
     )
-    rebalancing_history = relationship("RebalancingEvent", back_populates="portfolio")
+    rebalancing_history = relationship(
+        "RebalancingEvent", back_populates="portfolio", cascade="all, delete-orphan"
+    )
 
 
 # Asset Model
@@ -244,33 +259,31 @@ class Asset(Base):
     symbol = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     asset_type = Column(Enum(AssetType), nullable=False)
+    description = Column(Text)
 
     # Asset details
-    description = Column(Text)
+    exchange = Column(String)
+    currency = Column(String, default="USD")
+    country = Column(String)
     sector = Column(String)
     industry = Column(String)
-    country = Column(String)
-    currency = Column(String, default="USD")
-    exchange = Column(String)
+    isin = Column(String)
+    cusip = Column(String)
 
-    # Financial metrics
-    market_cap = Column(BigInteger)
-    shares_outstanding = Column(BigInteger)
-    pe_ratio = Column(DECIMAL(10, 2))
-    dividend_yield = Column(DECIMAL(5, 4))
-    beta = Column(DECIMAL(10, 4))
+    # Current market data
+    current_price = Column(DECIMAL(15, 6))
+    market_cap = Column(DECIMAL(20, 2))
+    volume_24h = Column(DECIMAL(20, 2))
+    price_change_24h = Column(DECIMAL(10, 4))
+    price_change_7d = Column(DECIMAL(10, 4))
 
-    # Trading information
+    # Status
+    is_active = Column(Boolean, default=True)
     is_tradable = Column(Boolean, default=True)
-    min_trade_amount = Column(DECIMAL(15, 2), default=1.0)
-    tick_size = Column(DECIMAL(10, 6), default=0.01)
 
-    # Metadata
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    last_updated = Column(DateTime(timezone=True))
 
-    # Relationships
     portfolio_assets = relationship("PortfolioAsset", back_populates="asset")
     price_history = relationship("AssetPrice", back_populates="asset")
     fundamental_data = relationship("FundamentalData", back_populates="asset")
@@ -284,37 +297,34 @@ class PortfolioAsset(Base):
     portfolio_id = Column(Integer, ForeignKey("portfolios.id"), nullable=False)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
 
-    # Position information
+    # Position details
     quantity = Column(DECIMAL(20, 8), nullable=False)
-    average_cost = Column(DECIMAL(15, 2), nullable=False)
-    current_price = Column(DECIMAL(15, 2))
-    market_value = Column(DECIMAL(15, 2))
+    purchase_price = Column(DECIMAL(15, 6), nullable=False)
+    purchase_date = Column(DateTime(timezone=True))
+    current_price = Column(DECIMAL(15, 6))
+    current_value = Column(DECIMAL(15, 2))
+    cost_basis = Column(DECIMAL(15, 2))
 
-    # Allocation
-    target_allocation = Column(DECIMAL(5, 2))  # Target percentage
-    current_allocation = Column(DECIMAL(5, 2))  # Current percentage
+    # Returns
+    unrealized_pnl = Column(DECIMAL(15, 2))
+    unrealized_pnl_pct = Column(DECIMAL(10, 4))
+    realized_pnl = Column(DECIMAL(15, 2))
 
-    # Performance
-    unrealized_pnl = Column(DECIMAL(15, 2), default=0)
-    realized_pnl = Column(DECIMAL(15, 2), default=0)
-    total_return = Column(DECIMAL(15, 4), default=0)
+    # Weight in portfolio
+    target_weight = Column(DECIMAL(5, 4))
+    actual_weight = Column(DECIMAL(5, 4))
 
-    # Metadata
-    first_purchase_date = Column(DateTime(timezone=True))
-    last_transaction_date = Column(DateTime(timezone=True))
+    # Risk metrics
+    beta = Column(DECIMAL(8, 4))
+    volatility = Column(DECIMAL(8, 4))
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    # Relationships
+    __table_args__ = (UniqueConstraint("portfolio_id", "asset_id"),)
+
     portfolio = relationship("Portfolio", back_populates="assets")
     asset = relationship("Asset", back_populates="portfolio_assets")
-
-    # Constraints
-    __table_args__ = (
-        UniqueConstraint("portfolio_id", "asset_id", name="unique_portfolio_asset"),
-        CheckConstraint("quantity >= 0", name="positive_quantity"),
-        CheckConstraint("average_cost >= 0", name="positive_average_cost"),
-    )
 
 
 class AssetPrice(Base):
@@ -322,38 +332,17 @@ class AssetPrice(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
-
-    # Price data
+    price = Column(DECIMAL(15, 6), nullable=False)
     open_price = Column(DECIMAL(15, 6))
     high_price = Column(DECIMAL(15, 6))
     low_price = Column(DECIMAL(15, 6))
-    close_price = Column(DECIMAL(15, 6), nullable=False)
-    volume = Column(BigInteger)
-    adjusted_close = Column(DECIMAL(15, 6))
+    close_price = Column(DECIMAL(15, 6))
+    volume = Column(DECIMAL(20, 2))
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
-    # Technical indicators
-    sma_20 = Column(DECIMAL(15, 6))
-    sma_50 = Column(DECIMAL(15, 6))
-    ema_12 = Column(DECIMAL(15, 6))
-    ema_26 = Column(DECIMAL(15, 6))
-    rsi = Column(DECIMAL(5, 2))
-    macd = Column(DECIMAL(15, 6))
-    bollinger_upper = Column(DECIMAL(15, 6))
-    bollinger_lower = Column(DECIMAL(15, 6))
+    __table_args__ = (Index("idx_asset_price_timestamp", "asset_id", "timestamp"),)
 
-    # Metadata
-    timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
-    data_source = Column(String, default="api")
-
-    # Relationships
     asset = relationship("Asset", back_populates="price_history")
-
-    # Constraints and indexes
-    __table_args__ = (
-        UniqueConstraint("asset_id", "timestamp", name="unique_asset_price_timestamp"),
-        Index("idx_asset_timestamp", "asset_id", "timestamp"),
-        CheckConstraint("close_price > 0", name="positive_close_price"),
-    )
 
 
 class Transaction(Base):
@@ -370,26 +359,22 @@ class Transaction(Base):
     quantity = Column(DECIMAL(20, 8))
     price = Column(DECIMAL(15, 6))
     amount = Column(DECIMAL(15, 2), nullable=False)
-    fees = Column(DECIMAL(15, 2), default=0)
-    tax = Column(DECIMAL(15, 2), default=0)
+    fees = Column(DECIMAL(15, 6), default=0)
+    currency = Column(String, default="USD")
 
-    # Order information
-    order_id = Column(String)
-    execution_venue = Column(String)
-    settlement_date = Column(DateTime)
-
-    # Status and metadata
+    # Status
     status = Column(
-        Enum(TransactionStatus), default=TransactionStatus.PENDING, nullable=False
+        Enum(TransactionStatus),
+        default=TransactionStatus.PENDING,
+        nullable=False,
     )
     notes = Column(Text)
-    external_id = Column(String)  # For integration with external systems
+    reference_id = Column(String)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    executed_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime)
 
-    # Relationships
     user = relationship("User", back_populates="transactions")
     asset = relationship("Asset")
     portfolio = relationship("Portfolio")
@@ -401,30 +386,16 @@ class Alert(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     asset_id = Column(Integer, ForeignKey("assets.id"))
-
-    # Alert configuration
     alert_type = Column(Enum(AlertType), nullable=False)
-    condition = Column(
-        String, nullable=False
-    )  # e.g., "price > 100", "volume > 1000000"
-    threshold_value = Column(DECIMAL(15, 6))
+    title = Column(String, nullable=False)
     message = Column(Text)
-
-    # Delivery settings
-    email_enabled = Column(Boolean, default=True)
-    sms_enabled = Column(Boolean, default=False)
-    push_enabled = Column(Boolean, default=True)
-
-    # Status
+    threshold_value = Column(DECIMAL(15, 6))
+    current_value = Column(DECIMAL(15, 6))
+    is_triggered = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-    triggered_count = Column(Integer, default=0)
-    last_triggered = Column(DateTime)
-
+    triggered_at = Column(DateTime)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    expires_at = Column(DateTime)
 
-    # Relationships
-    user = relationship("User", back_populates="alerts")
     asset = relationship("Asset")
 
 
@@ -433,28 +404,18 @@ class PortfolioPerformance(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     portfolio_id = Column(Integer, ForeignKey("portfolios.id"), nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    total_value = Column(DECIMAL(15, 2))
+    daily_return = Column(DECIMAL(10, 6))
+    cumulative_return = Column(DECIMAL(10, 6))
+    benchmark_return = Column(DECIMAL(10, 6))
+    alpha = Column(DECIMAL(10, 6))
+    beta = Column(DECIMAL(10, 6))
+    sharpe_ratio = Column(DECIMAL(10, 6))
+    max_drawdown = Column(DECIMAL(10, 6))
+    volatility = Column(DECIMAL(10, 6))
 
-    # Performance metrics
-    date = Column(DateTime(timezone=True), nullable=False)
-    total_value = Column(DECIMAL(15, 2), nullable=False)
-    daily_return = Column(DECIMAL(15, 6))
-    cumulative_return = Column(DECIMAL(15, 6))
-    benchmark_return = Column(DECIMAL(15, 6))
-    alpha = Column(DECIMAL(15, 6))
-    beta = Column(DECIMAL(15, 6))
-    volatility = Column(DECIMAL(15, 6))
-    sharpe_ratio = Column(DECIMAL(15, 6))
-
-    # Relationships
     portfolio = relationship("Portfolio", back_populates="performance_history")
-
-    # Constraints
-    __table_args__ = (
-        UniqueConstraint(
-            "portfolio_id", "date", name="unique_portfolio_performance_date"
-        ),
-        Index("idx_portfolio_date", "portfolio_id", "date"),
-    )
 
 
 class RebalancingEvent(Base):
@@ -462,21 +423,15 @@ class RebalancingEvent(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     portfolio_id = Column(Integer, ForeignKey("portfolios.id"), nullable=False)
-
-    # Rebalancing details
-    trigger_reason = Column(String)  # threshold, scheduled, manual
-    trades_executed = Column(JSON)  # List of trades made
-    total_trades = Column(Integer)
-    total_fees = Column(DECIMAL(15, 2))
-
-    # Performance impact
-    portfolio_value_before = Column(DECIMAL(15, 2))
-    portfolio_value_after = Column(DECIMAL(15, 2))
-
+    trigger = Column(String)
+    old_allocation = Column(JSON)
+    new_allocation = Column(JSON)
+    trades_executed = Column(JSON)
+    total_cost = Column(DECIMAL(15, 2))
+    status = Column(String, default="completed")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    completed_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime)
 
-    # Relationships
     portfolio = relationship("Portfolio", back_populates="rebalancing_history")
 
 
@@ -485,39 +440,29 @@ class FundamentalData(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
-
-    # Financial metrics
+    pe_ratio = Column(DECIMAL(10, 4))
+    pb_ratio = Column(DECIMAL(10, 4))
+    ps_ratio = Column(DECIMAL(10, 4))
+    ev_ebitda = Column(DECIMAL(10, 4))
+    dividend_yield = Column(DECIMAL(8, 4))
+    earnings_per_share = Column(DECIMAL(15, 4))
     revenue = Column(DECIMAL(20, 2))
     net_income = Column(DECIMAL(20, 2))
     total_assets = Column(DECIMAL(20, 2))
     total_debt = Column(DECIMAL(20, 2))
-    shareholders_equity = Column(DECIMAL(20, 2))
-    operating_cash_flow = Column(DECIMAL(20, 2))
     free_cash_flow = Column(DECIMAL(20, 2))
-
-    # Ratios
-    pe_ratio = Column(DECIMAL(10, 2))
-    pb_ratio = Column(DECIMAL(10, 2))
-    debt_to_equity = Column(DECIMAL(10, 4))
     return_on_equity = Column(DECIMAL(10, 4))
     return_on_assets = Column(DECIMAL(10, 4))
-    profit_margin = Column(DECIMAL(10, 4))
-
-    # Metadata
-    period_type = Column(String)  # quarterly, annual
-    period_end_date = Column(DateTime)
+    debt_to_equity = Column(DECIMAL(10, 4))
+    current_ratio = Column(DECIMAL(10, 4))
+    gross_margin = Column(DECIMAL(10, 4))
+    operating_margin = Column(DECIMAL(10, 4))
+    net_margin = Column(DECIMAL(10, 4))
     report_date = Column(DateTime)
+    period = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     asset = relationship("Asset", back_populates="fundamental_data")
-
-    # Constraints
-    __table_args__ = (
-        UniqueConstraint(
-            "asset_id", "period_end_date", "period_type", name="unique_fundamental_data"
-        ),
-    )
 
 
 class NewsItem(Base):
@@ -525,24 +470,16 @@ class NewsItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     asset_id = Column(Integer, ForeignKey("assets.id"))
-
-    # News content
     title = Column(String, nullable=False)
     content = Column(Text)
-    summary = Column(Text)
     url = Column(String)
     source = Column(String)
     author = Column(String)
-
-    # Sentiment analysis
-    sentiment_score = Column(DECIMAL(5, 4))  # -1 to 1
-    sentiment_label = Column(String)  # positive, negative, neutral
-
-    # Metadata
+    sentiment_score = Column(DECIMAL(5, 4))
+    sentiment_label = Column(String)
     published_at = Column(DateTime(timezone=True), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     asset = relationship("Asset", back_populates="news")
 
 
@@ -551,23 +488,17 @@ class AuditLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-
-    # Audit details
     action = Column(String, nullable=False)
-    resource_type = Column(String)  # user, portfolio, transaction, etc.
+    resource_type = Column(String)
     resource_id = Column(String)
     old_values = Column(JSON)
     new_values = Column(JSON)
-
-    # Request context
     ip_address = Column(String)
     user_agent = Column(String)
     endpoint = Column(String)
     request_id = Column(String)
-
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
     user = relationship("User", back_populates="audit_logs")
 
 
@@ -578,28 +509,21 @@ class AIModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     description = Column(Text)
-    model_type = Column(String, nullable=False)  # LSTM, GARCH, PCA, etc.
+    model_type = Column(String, nullable=False)
     version = Column(String, default="1.0")
-
-    # Model configuration
     parameters = Column(JSON)
     hyperparameters = Column(JSON)
     training_data_period = Column(String)
-
-    # Performance metrics
     accuracy = Column(DECIMAL(5, 4))
     precision = Column(DECIMAL(5, 4))
     recall = Column(DECIMAL(5, 4))
     f1_score = Column(DECIMAL(5, 4))
     mse = Column(DECIMAL(15, 8))
     mae = Column(DECIMAL(15, 8))
-
-    # Status
     is_active = Column(Boolean, default=True)
     is_trained = Column(Boolean, default=False)
     last_trained = Column(DateTime)
     next_training = Column(DateTime)
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -612,21 +536,14 @@ class AIPrediction(Base):
     id = Column(Integer, primary_key=True, index=True)
     model_id = Column(Integer, ForeignKey("ai_models.id"), nullable=False)
     asset_id = Column(Integer, ForeignKey("assets.id"))
-
-    # Prediction details
-    prediction_type = Column(String, nullable=False)  # price, trend, risk, etc.
+    prediction_type = Column(String, nullable=False)
     prediction_value = Column(DECIMAL(15, 6))
     confidence = Column(DECIMAL(5, 4))
     probability_distribution = Column(JSON)
-
-    # Time horizon
-    prediction_horizon = Column(String)  # 1d, 1w, 1m, 3m, 1y
+    prediction_horizon = Column(String)
     target_date = Column(DateTime(timezone=True))
-
-    # Validation
     actual_value = Column(DECIMAL(15, 6))
     accuracy_score = Column(DECIMAL(5, 4))
-
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
     model = relationship("AIModel", back_populates="predictions")
@@ -641,22 +558,15 @@ class SmartContract(Base):
     address = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     contract_type = Column(String, nullable=False)
-
-    # Contract details
     abi = Column(JSON)
     bytecode = Column(Text)
     source_code = Column(Text)
     compiler_version = Column(String)
-
-    # Network information
-    network = Column(String, nullable=False)  # mainnet, testnet, polygon, etc.
+    network = Column(String, nullable=False)
     chain_id = Column(Integer)
     deployment_tx_hash = Column(String)
-
-    # Status
     is_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -669,25 +579,18 @@ class BlockchainTransaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     tx_hash = Column(String, unique=True, index=True, nullable=False)
     contract_id = Column(Integer, ForeignKey("smart_contracts.id"))
-
-    # Transaction details
     from_address = Column(String, nullable=False)
     to_address = Column(String, nullable=False)
-    value = Column(DECIMAL(30, 18))  # Support for high precision crypto values
+    value = Column(DECIMAL(30, 18))
     gas_limit = Column(Integer)
     gas_used = Column(Integer)
     gas_price = Column(DECIMAL(30, 18))
-
-    # Block information
     block_number = Column(BigInteger)
     block_hash = Column(String)
     transaction_index = Column(Integer)
-
-    # Status and metadata
-    status = Column(String, nullable=False)  # confirmed, pending, failed
+    status = Column(String, nullable=False)
     confirmations = Column(Integer, default=0)
     network = Column(String, nullable=False)
-
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     block_timestamp = Column(DateTime(timezone=True))
 
@@ -702,19 +605,13 @@ class SystemLog(Base):
     log_level = Column(String, nullable=False, index=True)
     component = Column(String, nullable=False, index=True)
     message = Column(Text, nullable=False)
-
-    # Context
     request_id = Column(String)
     user_id = Column(Integer)
     session_id = Column(String)
-
-    # Additional data
     log_metadata = Column(JSON)
     stack_trace = Column(Text)
-
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
-    # Indexes for performance
     __table_args__ = (
         Index("idx_log_level_timestamp", "log_level", "timestamp"),
         Index("idx_component_timestamp", "component", "timestamp"),
@@ -727,12 +624,8 @@ class SystemMetric(Base):
     id = Column(Integer, primary_key=True, index=True)
     metric_name = Column(String, nullable=False, index=True)
     metric_value = Column(DECIMAL(15, 6), nullable=False)
-    metric_type = Column(String)  # counter, gauge, histogram
-
-    # Labels/tags
+    metric_type = Column(String)
     labels = Column(JSON)
-
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
-    # Constraints
     __table_args__ = (Index("idx_metric_name_timestamp", "metric_name", "timestamp"),)

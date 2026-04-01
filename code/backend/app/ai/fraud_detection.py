@@ -409,7 +409,7 @@ class AdvancedFraudDetectionSystem:
                 ):
                     risk_factors.append("Unusual location")
                     risk_score += 0.4
-            current_time = datetime.now().hour
+            current_time = datetime.utcnow().hour
             typical_hours = profile.behavioral_patterns.get("login_hours", [])
             if typical_hours and current_time not in typical_hours:
                 risk_factors.append("Unusual login time")

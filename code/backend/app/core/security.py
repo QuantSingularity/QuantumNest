@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 import jwt
 from app.core.config import get_settings
-from app.core.logging import get_logger, security_logger
+from app.core.logging import get_logger
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -207,9 +207,7 @@ class SecurityManager:
             if attempt > lockout_window
         ]
         self._failed_attempts[email].append(now)
-        security_logger.log_failed_authentication(
-            email, "invalid_credentials", ip_address
-        )
+        self.logger.warning("Failed authentication for %s from %s", email, ip_address)
         if len(self._failed_attempts[email]) >= self.settings.MAX_LOGIN_ATTEMPTS:
             self.logger.warning(
                 "Account locked due to too many failed attempts",

@@ -2,60 +2,70 @@ import os
 from datetime import datetime, timedelta
 from typing import Any, List, Optional
 
-import bcrypt
-import jwt
 from app.db.database import get_db
+from app.main import get_current_active_user
 from app.models.models import User
-from app.schemas.schemas import UserCreate, UserResponse, UserUpdate
+from app.schemas.schemas import LoginResponse, UserCreate, UserResponse, UserUpdate
 from fastapi import APIRouter, Depends, HTTPException, status
+from jose import jwt
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/users", tags=["users"])
-SECRET_KEY = os.getenv("SECRET_KEY", "quantum_nest_secret_key")
+router = APIRouter(tags=["users"])
+
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7",
+)
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password for storing."""
-    salt = bcrypt.gensalt()
-    hashed_pwd = bcrypt.hashpw(password.encode("utf-8"), salt)
-    return hashed_pwd.decode("utf-8")
+    return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a stored password against one provided by user"""
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-    )
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT token"""
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + (
+        expires_delta
+        if expires_delta
+        else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Any:
-    """Create a new user"""
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
+    if user.username:
+        existing_username = (
+            db.query(User).filter(User.username == user.username).first()
+        )
+        if existing_username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken"
+            )
     hashed_password = get_password_hash(user.password)
     db_user = User(
         username=user.username,
         email=user.email,
+        first_name=user.first_name or "",
+        last_name=user.last_name or "",
         hashed_password=hashed_password,
-        role="user",
+        role=user.role.value if user.role else "user",
+        tier=user.tier.value if user.tier else "basic",
     )
     db.add(db_user)
     db.commit()
@@ -63,16 +73,30 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Any:
     return db_user
 
 
+@router.get("/me", response_model=UserResponse)
+def get_current_user_profile(
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return current_user
+
+
 @router.get("/", response_model=List[UserResponse])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)) -> Any:
-    """Get all users"""
+def read_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
     users = db.query(User).offset(skip).limit(limit).all()
     return users
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-def read_user(user_id: int, db: Session = Depends(get_db)) -> Any:
-    """Get a specific user by ID"""
+def read_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(
@@ -82,26 +106,38 @@ def read_user(user_id: int, db: Session = Depends(get_db)) -> Any:
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)) -> Any:
-    """Update a user"""
+def update_user(
+    user_id: int,
+    user: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    update_data = user.dict(exclude_unset=True)
+    update_data = user.model_dump(exclude_unset=True)
     if "password" in update_data:
         update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+    if "role" in update_data and update_data["role"] is not None:
+        update_data["role"] = update_data["role"].value
+    if "tier" in update_data and update_data["tier"] is not None:
+        update_data["tier"] = update_data["tier"].value
     for key, value in update_data.items():
         setattr(db_user, key, value)
+    db_user.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(db_user)
     return db_user
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: Session = Depends(get_db)) -> Any:
-    """Delete a user"""
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> None:
     db_user = db.query(User).filter(User.id == user_id).first()
     if db_user is None:
         raise HTTPException(
@@ -109,12 +145,14 @@ def delete_user(user_id: int, db: Session = Depends(get_db)) -> Any:
         )
     db.delete(db_user)
     db.commit()
-    return {"detail": "User deleted successfully"}
 
 
-@router.post("/login")
-def login(email: str, password: str, db: Session = Depends(get_db)) -> Any:
-    """Authenticate a user and return a token"""
+@router.post("/login", response_model=LoginResponse)
+def login(
+    email: str,
+    password: str,
+    db: Session = Depends(get_db),
+) -> Any:
     user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
@@ -122,9 +160,14 @@ def login(email: str, password: str, db: Session = Depends(get_db)) -> Any:
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive",
+        )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.email, "id": user.id, "role": user.role},
+        data={"sub": user.email, "id": user.id, "role": str(user.role)},
         expires_delta=access_token_expires,
     )
     user.last_login = datetime.utcnow()
@@ -135,5 +178,5 @@ def login(email: str, password: str, db: Session = Depends(get_db)) -> Any:
         "user_id": user.id,
         "username": user.username,
         "email": user.email,
-        "role": user.role,
+        "role": str(user.role),
     }

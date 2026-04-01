@@ -1,135 +1,171 @@
-# QuantumNest
+# QuantumNest Capital
 
-## Overview
+Advanced financial platform with AI-powered analytics, portfolio management, and blockchain integration.
 
-QuantumNest Capital is a comprehensive financial technology platform designed for institutional and retail investors. This version includes advanced AI capabilities, robust security features, and enterprise-grade financial services suitable for investor presentation and production deployment.
+---
 
-## Key Features
+## Quick Start (Docker)
 
-### Financial Services
+```bash
+# 1. Clone / unzip the project
+cd quantumnest
 
-- **Advanced Trading Engine**: High-performance trading system with real-time market data
-- **Portfolio Management**: Sophisticated portfolio optimization and risk management
-- **Risk Assessment**: Multi-layered risk analysis and compliance monitoring
-- **Market Data Integration**: Real-time and historical market data from multiple sources
+# 2. Create your environment file
+cp .env.example .env
+#    → Open .env and set SECRET_KEY, API_SECRET_KEY (and POSTGRES_PASSWORD for prod)
 
-### AI & Machine Learning
+# 3. Start all services
+docker compose up -d
 
-- **Fraud Detection**: Advanced ML-based fraud detection system
-- **Portfolio Optimization**: AI-powered portfolio optimization using modern portfolio theory
-- **Predictive Analytics**: LSTM-based price prediction and market forecasting
-- **Sentiment Analysis**: News and social media sentiment analysis for market insights
-- **Risk Profiling**: AI-driven investor risk profiling and recommendations
+# 4. (First run only) initialise the database
+docker compose --profile migrate run --rm migrate
 
-### Security & Compliance
+# 5. Open the API docs
+open http://localhost:8000/docs
+```
 
-- **Multi-Factor Authentication**: Advanced 2FA with TOTP support
-- **Role-Based Access Control**: Granular permission system
-- **Data Encryption**: End-to-end encryption for sensitive data
-- **API Security**: Rate limiting, request signing, and comprehensive security middleware
-- **Audit Logging**: Complete audit trail for compliance
+### With the blockchain node (optional)
 
-### Enterprise Features
+```bash
+docker compose --profile blockchain up -d
+```
 
-- **Scalable Architecture**: Microservices-ready design
-- **High Availability**: Redis caching and session management
-- **Monitoring & Logging**: Comprehensive logging and health checks
-- **Testing Framework**: Extensive unit and integration tests
+### Development mode (live reload)
 
-## 🛠 Installation & Setup
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+---
+
+## Manual Setup (without Docker)
 
 ### Prerequisites
 
 - Python 3.11+
-- PostgreSQL 13+
-- Redis 6+
-- Node.js 18+ (for frontend)
+- PostgreSQL 14+ **or** SQLite (dev only)
+- Redis 7+
+- Node.js 20+ (blockchain only)
 
-### Backend Setup
-
-1. **Clone and navigate to backend directory**:
-
-   ```bash
-   cd code/backend
-   ```
-
-2. **Create virtual environment**:
-
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Environment Configuration**:
-   Create a `.env` file in the backend directory:
-
-   ```env
-   # Database
-   DATABASE_URL=postgresql://username:password@localhost:5432/quantumnest
-
-   # Redis
-   REDIS_HOST=localhost
-   REDIS_PORT=6379
-   REDIS_PASSWORD=
-
-   # Security
-   SECRET_KEY=your-secret-key-here
-   JWT_SECRET_KEY=your-jwt-secret-key-here
-   API_SECRET_KEY=your-api-secret-key-here
-   API_KEY=your-api-key-here
-
-   # Features
-   ENABLE_REQUEST_SIGNING=true
-   ENABLE_IP_FILTERING=false
-   ENABLE_CSRF_PROTECTION=true
-
-   # External APIs
-   ALPHA_VANTAGE_API_KEY=your-alpha-vantage-key
-   OPENAI_API_KEY=your-openai-key
-
-   # Allowed Origins
-   ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
-   ```
-
-5. **Database Setup**:
-
-   ```bash
-   # Create database
-   createdb quantumnest
-
-   # Initialize database (using Flask app)
-   python -c "from app.main_flask import app; app.app_context().push(); from app.models.models import db; db.create_all()"
-   ```
-
-6. **Run the application**:
-
-   ```bash
-   # Using Flask (recommended for enhanced features)
-   python app/main_flask.py
-
-   # Or using FastAPI (original)
-   python app/main.py
-   ```
-
-## Testing
-
-Run the comprehensive test suite:
+### Backend
 
 ```bash
-cd code/backend
+cd backend
 
-# Run all tests
-python run_tests.py
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
 
-# Run specific test categories
-python run_tests.py --syntax    # Syntax checking
-python run_tests.py --imports   # Import validation
-python run_tests.py --security  # Security checks
-python run_tests.py --quality   # Code quality checks
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env              # edit values as needed
+
+# Run development server
+python run_flask.py
+# → API available at http://localhost:8000
+# → Docs at         http://localhost:8000/docs
 ```
+
+### Blockchain (optional)
+
+```bash
+cd blockchain
+npm install
+npx hardhat node                  # local Ethereum node on :8545
+npx hardhat run scripts/deploy.js --network localhost
+```
+
+---
+
+## Project Structure
+
+```
+code/
+├── backend/
+│   ├── app/
+│   │   ├── api/          # Route handlers (users, portfolio, market, ai, blockchain, admin)
+│   │   ├── auth/         # JWT authentication & RBAC
+│   │   ├── ai/           # LSTM, GARCH, fraud detection, portfolio optimisation
+│   │   ├── core/         # Config, logging, security manager
+│   │   ├── db/           # SQLAlchemy engine, session, database manager
+│   │   ├── middleware/    # Rate-limiting & security headers
+│   │   ├── models/       # SQLAlchemy ORM models
+│   │   ├── schemas/      # Pydantic request/response schemas
+│   │   ├── services/     # Market data, risk management, trading
+│   │   └── workers/      # Background task queue
+│   ├── tests/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── .env.example
+├── blockchain/
+│   ├── contracts/        # Solidity smart contracts
+│   ├── scripts/          # Hardhat deployment scripts
+│   ├── Dockerfile
+│   └── hardhat.config.js
+├── scripts/
+│   └── init.sql          # PostgreSQL bootstrap
+├── docker-compose.yml
+├── docker-compose.dev.yml
+└── .env.example
+```
+
+---
+
+## API Overview
+
+| Prefix        | Description                            |
+| ------------- | -------------------------------------- |
+| `GET /`       | Welcome + version                      |
+| `GET /health` | Health check                           |
+| `POST /token` | OAuth2 password flow — get JWT         |
+| `/users`      | User registration, profile, management |
+| `/portfolio`  | Portfolio CRUD, assets, performance    |
+| `/market`     | Assets, prices, market data, news      |
+| `/ai`         | Predictions, optimisation, sentiment   |
+| `/blockchain` | Smart contracts, wallets, tokenisation |
+| `/admin`      | Dashboard, user admin, system logs     |
+| `GET /docs`   | Interactive Swagger UI                 |
+
+---
+
+## Running Tests
+
+```bash
+cd backend
+pytest tests/ -v --cov=app --cov-report=term-missing
+```
+
+---
+
+## Environment Variables
+
+See `backend/.env.example` for the full list. Key variables:
+
+| Variable          | Required | Description                      |
+| ----------------- | -------- | -------------------------------- |
+| `SECRET_KEY`      | ✅       | JWT signing key (min 32 chars)   |
+| `API_SECRET_KEY`  | ✅       | API key signing secret           |
+| `DATABASE_URL`    |          | SQLite (dev) or PostgreSQL URL   |
+| `REDIS_URL`       |          | Redis connection URL             |
+| `ALLOWED_ORIGINS` |          | Comma-separated CORS origins     |
+| `OPENAI_API_KEY`  |          | For AI financial advisor feature |
+
+---
+
+## Security Notes
+
+- Never commit `.env` files to version control
+- In production, set `ENVIRONMENT=production` and provide an explicit `SECRET_KEY`
+- The `ALLOWED_ORIGINS=*` default is **only** acceptable in local development
+- The blockchain `PRIVATE_KEY` in `.env.example` is the well-known Hardhat test account — never use it on mainnet
+
+---
+
+## Tech Stack
+
+**Backend:** FastAPI · SQLAlchemy 2 · Pydantic v2 · PostgreSQL / SQLite · Redis  
+**AI / ML:** scikit-learn · NumPy · Pandas · statsmodels · CVXPY  
+**Blockchain:** Hardhat · Solidity 0.8.19 · Web3.py  
+**Infrastructure:** Docker · Docker Compose · Gunicorn + Uvicorn workers
