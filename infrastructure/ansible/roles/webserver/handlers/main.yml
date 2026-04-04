@@ -1,6 +1,12 @@
 ---
-# roles/webserver/handlers/main.yml
-- name: Restart Nginx
-  systemd:
+- name: restart nginx
+  ansible.builtin.systemd:
     name: nginx
     state: restarted
+  become: true
+
+- name: reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  become: true

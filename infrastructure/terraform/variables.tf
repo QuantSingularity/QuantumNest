@@ -7,11 +7,17 @@ variable "aws_region" {
 variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
+
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be one of: dev, staging, prod."
+  }
 }
 
 variable "app_name" {
   description = "Application name"
   type        = string
+  default     = "quantumnest"
 }
 
 variable "vpc_cidr" {
@@ -59,24 +65,27 @@ variable "db_instance_class" {
 variable "db_name" {
   description = "Database name"
   type        = string
+  default     = "quantumnest"
 }
 
 variable "db_username" {
   description = "Database username"
   type        = string
   sensitive   = true
+  default     = "quantumnest_admin"
 }
 
 variable "db_password" {
   description = "Database password"
   type        = string
   sensitive   = true
+  default     = ""
 }
 
 variable "default_tags" {
   description = "Default tags for all resources"
   type        = map(string)
-  default     = {
+  default = {
     Terraform   = "true"
     Environment = "dev"
   }
@@ -85,45 +94,7 @@ variable "default_tags" {
 variable "kubernetes_version" {
   description = "Kubernetes version for EKS cluster"
   type        = string
-  default     = "1.28"
-}
-
-variable "allowed_cidr_blocks" {
-  description = "CIDR blocks allowed to access EKS API"
-  type        = list(string)
-  default     = ["10.0.0.0/8"]
-}
-
-variable "vault_address" {
-  description = "Vault server address"
-  type        = string
-  default     = "https://vault.example.com:8200"
-}
-
-variable "vault_token" {
-  description = "Vault authentication token"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "assume_role_arn" {
-  description = "IAM role ARN to assume for cross-account access"
-  type        = string
-  default     = ""
-}
-
-variable "external_id" {
-  description = "External ID for IAM role assumption"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "kubernetes_version" {
-  description = "Kubernetes version for EKS cluster"
-  type        = string
-  default     = "1.28"
+  default     = "1.29"
 }
 
 variable "allowed_cidr_blocks" {

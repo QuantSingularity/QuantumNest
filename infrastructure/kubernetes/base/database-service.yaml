@@ -1,15 +1,20 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ .Values.appName }}-database"
+  name: quantumnest-database
+  namespace: quantumnest-prod
   labels:
-    app: "{{ .Values.appName }}-database"
+    app: quantumnest-database
+    tier: database
+    app.kubernetes.io/name: quantumnest-database
+    app.kubernetes.io/component: database
 spec:
   type: ClusterIP
-  ports:
-    - port: "{{ .Values.database.servicePort }}"
-      targetPort: "{{ .Values.database.containerPort }}"
-      protocol: TCP
-      name: mysql
+  clusterIP: None
   selector:
-    app: "{{ .Values.appName }}-database"
+    app: quantumnest-database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP

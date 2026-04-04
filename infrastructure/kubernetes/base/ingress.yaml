@@ -1,31 +1,50 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: "{{ .Values.appName }}-ingress"
+  name: quantumnest-ingress
+  namespace: quantumnest-prod
+  labels:
+    app: quantumnest
+    app.kubernetes.io/name: quantumnest-ingress
+    app.kubernetes.io/part-of: quantumnest-platform
   annotations:
-    kubernetes.io/ingress.class: "{{ .Values.ingress.class }}"
-    nginx.ingress.kubernetes.io/ssl-redirect: "{{ .Values.ingress.sslRedirect }}"
-    cert-manager.io/cluster-issuer: "{{ .Values.ingress.certManager.issuer }}"
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Permissions-Policy: geolocation=(), microphone=(), camera=()";
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
-        - "{{ .Values.ingress.host }}"
-      secretName: "{{ .Values.appName }}-tls"
+        - app.quantumnest.com
+      secretName: quantumnest-tls
   rules:
-    - host: "{{ .Values.ingress.host }}"
+    - host: app.quantumnest.com
       http:
         paths:
           - path: /api
             pathType: Prefix
             backend:
               service:
-                name: "{{ .Values.appName }}-backend"
+                name: quantumnest-backend
                 port:
-                  number: "{{ .Values.backend.servicePort }}"
+                  number: 80
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: "{{ .Values.appName }}-frontend"
+                name: quantumnest-frontend
                 port:
-                  number: "{{ .Values.frontend.servicePort }}"
+                  number: 80

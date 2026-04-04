@@ -1,0 +1,489 @@
+# QuantumNest Infrastructure - Docker Compose
+# Local development and monitoring stack
+# Usage: docker compose up -d
+
+name: quantumnest
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 30s
+
+services:
+  # ──────────────────────────────────────────
+  # Infrastructure Tools Container
+  # ──────────────────────────────────────────
+  infra-tools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+      args:
+        TERRAFORM_VERSION: "1.9.5"
+        KUBECTL_VERSION: "1.29.9"
+        HELM_VERSION: "3.16.1"
+        ANSIBLE_VERSION: "10.4.0"
+        AWSCLI_VERSION: "2.17.50"
+    image: quantumnest/infra-tools:latest
+    container_name: quantumnest-infra-tools
+    <<: *restart-policy
+    volumes:
+      - .:/workspace
+      - infra-terraform-cache:/home/infraops/.terraform.d/plugin-cache
+      - ${HOME}/.aws:/home/infraops/.aws:ro
+      - ${KUBECONFIG:-${HOME}/.kube/config}:/home/infraops/.kube/config:ro
+    environment:
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-west-2}
+      - TF_CLI_ARGS_init=-plugin-dir=/home/infraops/.terraform.d/plugin-cache
+      - ANSIBLE_HOST_KEY_CHECKING=False
+      - ANSIBLE_RETRY_FILES_ENABLED=False
+    networks:
+      - quantumnest-internal
+    profiles:
+      - tools
+    logging: *default-logging
+
+  # ──────────────────────────────────────────
+  # Monitoring Stack
+  # ──────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: quantumnest-prometheus
+    <<: *restart-policy
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--storage.tsdb.retention.size=10GB"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--log.level=info"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - quantumnest-monitoring
+      - quantumnest-internal
+    healthcheck:
+      <<: *healthcheck-defaults
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9090/-/healthy",
+        ]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: quantumnest-alertmanager
+    <<: *restart-policy
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+      - "--web.external-url=http://localhost:9093"
+      - "--log.level=info"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    networks:
+      - quantumnest-monitoring
+    healthcheck:
+      <<: *healthcheck-defaults
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9093/-/healthy",
+        ]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: quantumnest-grafana
+    <<: *restart-policy
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+      - GF_SECURITY_SECRET_KEY=${GRAFANA_SECRET_KEY:?GRAFANA_SECRET_KEY is required}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_USERS_ALLOW_ORG_CREATE=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_BASIC_ENABLED=true
+      - GF_SERVER_PROTOCOL=http
+      - GF_SERVER_DOMAIN=localhost
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_LOG_MODE=console
+      - GF_LOG_LEVEL=info
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_DATABASE_TYPE=sqlite3
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    networks:
+      - quantumnest-monitoring
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health",
+        ]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    user: "472"
+
+  # ──────────────────────────────────────────
+  # ELK Stack
+  # ──────────────────────────────────────────
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+    container_name: quantumnest-elasticsearch
+    <<: *restart-policy
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=quantumnest-logging-cluster
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required}
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.license.self_generated.type=basic
+      - xpack.ml.enabled=false
+      - ES_JAVA_OPTS=-Xms${ES_HEAP_SIZE:-1g} -Xmx${ES_HEAP_SIZE:-1g}
+      - bootstrap.memory_lock=true
+      - action.destructive_requires_name=true
+      - indices.fielddata.cache.size=20%
+      - indices.breaker.total.limit=70%
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./monitoring/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    networks:
+      - quantumnest-monitoring
+      - quantumnest-internal
+    healthcheck:
+      <<: *healthcheck-defaults
+      start_period: 60s
+      test: >
+        CMD-SHELL curl -sf -u elastic:$$ELASTIC_PASSWORD
+        http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=10s || exit 1
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.2
+    container_name: quantumnest-kibana
+    <<: *restart-policy
+    environment:
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:?KIBANA_PASSWORD is required}
+      - XPACK_SECURITY_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY:?KIBANA_ENCRYPTION_KEY is required}
+      - XPACK_REPORTING_ENCRYPTIONKEY=${KIBANA_REPORTING_KEY:?KIBANA_REPORTING_KEY is required}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_SAVED_OBJECTS_KEY:?KIBANA_SAVED_OBJECTS_KEY is required}
+      - LOGGING_ROOT_LEVEL=info
+      - XPACK_TELEMETRY_ENABLED=false
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    networks:
+      - quantumnest-monitoring
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      start_period: 90s
+      test:
+        [
+          "CMD-SHELL",
+          'curl -sf http://localhost:5601/api/status | jq -e ''.status.overall.level == "available"'' || exit 1',
+        ]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.2
+    container_name: quantumnest-logstash
+    <<: *restart-policy
+    environment:
+      - LS_JAVA_OPTS=-Xms${LS_HEAP_SIZE:-512m} -Xmx${LS_HEAP_SIZE:-512m}
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - LOGSTASH_WRITER_USER=logstash_writer
+      - LOGSTASH_WRITER_PASSWORD=${LOGSTASH_WRITER_PASSWORD:?LOGSTASH_WRITER_PASSWORD is required}
+      - LOGSTASH_SYSTEM_PASSWORD=${LOGSTASH_SYSTEM_PASSWORD:?LOGSTASH_SYSTEM_PASSWORD is required}
+      - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+      - TRANSACTION_HASH_KEY=${TRANSACTION_HASH_KEY:?TRANSACTION_HASH_KEY is required}
+      - XPACK_MONITORING_ENABLED=false
+    volumes:
+      - ./monitoring/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - logstash-data:/usr/share/logstash/data
+    ports:
+      - "${LOGSTASH_BEATS_PORT:-5044}:5044"
+      - "${LOGSTASH_HTTP_PORT:-8080}:8080"
+      - "${LOGSTASH_API_PORT:-9600}:9600"
+    networks:
+      - quantumnest-monitoring
+      - quantumnest-internal
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      start_period: 120s
+      test: ["CMD", "curl", "-sf", "http://localhost:9600/?pretty"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+
+  # ──────────────────────────────────────────
+  # Vault (for local dev/testing)
+  # ──────────────────────────────────────────
+  vault:
+    image: hashicorp/vault:1.17.5
+    container_name: quantumnest-vault
+    <<: *restart-policy
+    cap_add:
+      - IPC_LOCK
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_TOKEN:-quantumnest-dev-token}
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+      - VAULT_ADDR=http://0.0.0.0:8200
+      - VAULT_LOG_LEVEL=info
+    command: server -dev
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+    volumes:
+      - vault-data:/vault/data
+      - ./security/secrets/vault/vault.hcl:/vault/config/vault.hcl:ro
+      - ./security/secrets/vault/policies.hcl:/vault/policies/quantumnest.hcl:ro
+    networks:
+      - quantumnest-internal
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "vault", "status"]
+    logging: *default-logging
+    profiles:
+      - vault
+
+  # ──────────────────────────────────────────
+  # PostgreSQL (for local dev)
+  # ──────────────────────────────────────────
+  postgres:
+    image: postgres:14-alpine
+    container_name: quantumnest-postgres
+    <<: *restart-policy
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-quantumnest}
+      - POSTGRES_USER=${POSTGRES_USER:-quantumnest_admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/postgres-init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - quantumnest-internal
+    healthcheck:
+      <<: *healthcheck-defaults
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-quantumnest_admin} -d ${POSTGRES_DB:-quantumnest}",
+        ]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - dev
+
+  # ──────────────────────────────────────────
+  # Redis (for local dev)
+  # ──────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: quantumnest-redis
+    <<: *restart-policy
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory ${REDIS_MAX_MEMORY:-256mb}
+      --maxmemory-policy allkeys-lru
+      --loglevel notice
+      --save 900 1
+      --save 300 10
+    volumes:
+      - redis-data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - quantumnest-internal
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - dev
+
+  # ──────────────────────────────────────────
+  # Node exporter (host metrics)
+  # ──────────────────────────────────────────
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: quantumnest-node-exporter
+    <<: *restart-policy
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    networks:
+      - quantumnest-monitoring
+    healthcheck:
+      <<: *healthcheck-defaults
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9100/metrics",
+        ]
+    logging: *default-logging
+    security_opt:
+      - no-new-privileges:true
+    pid: host
+
+  # ──────────────────────────────────────────
+  # cAdvisor (container metrics)
+  # ──────────────────────────────────────────
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.50.0
+    container_name: quantumnest-cadvisor
+    <<: *restart-policy
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /cgroup:/cgroup:ro
+    ports:
+      - "${CADVISOR_PORT:-8082}:8080"
+    networks:
+      - quantumnest-monitoring
+    healthcheck:
+      <<: *healthcheck-defaults
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/healthz",
+        ]
+    logging: *default-logging
+
+networks:
+  quantumnest-monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  quantumnest-internal:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+
+volumes:
+  prometheus-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  grafana-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  kibana-data:
+    driver: local
+  logstash-data:
+    driver: local
+  vault-data:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  infra-terraform-cache:
+    driver: local

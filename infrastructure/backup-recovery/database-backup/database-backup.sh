@@ -14,8 +14,8 @@ AUDIT_LOG="/var/log/quantumnest/backup-audit.log"
 if [[ -f "$CONFIG_FILE" ]]; then
     source "$CONFIG_FILE"
 else
-    echo "ERROR: Configuration file not found: $CONFIG_FILE" >&2
-    exit 1
+    echo "WARNING: Configuration file not found: $CONFIG_FILE - using defaults" >echo "ERROR: Configuration file not found: $CONFIG_FILE" >&22
+
 fi
 
 # Default configuration values

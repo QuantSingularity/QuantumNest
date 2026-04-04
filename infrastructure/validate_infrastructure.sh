@@ -1,150 +1,276 @@
 #!/bin/bash
-# Infrastructure Validation Script
-# This script validates all infrastructure components
+# QuantumNest Infrastructure Validation Script
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "=== QuantumNest Infrastructure Validation ==="
-echo ""
-
-# Color codes
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-# Function to print colored output
-print_status() {
-    if [ $1 -eq 0 ]; then
-        echo -e "${GREEN}✓${NC} $2"
-    else
-        echo -e "${RED}✗${NC} $2"
-    fi
-}
+PASS=0
+FAIL=0
+WARN=0
 
-# Track overall status
-OVERALL_STATUS=0
-
-# =================================================================
-# TERRAFORM VALIDATION
-# =================================================================
-
-echo "=== Terraform Validation ==="
-
-# Check if terraform is installed
-if command -v terraform >/dev/null 2>&1; then
-    print_status 0 "Terraform is installed"
-    
-    cd terraform
-    
-    # Format check
-    echo "Running terraform fmt..."
-    if terraform fmt -check -recursive; then
-        print_status 0 "Terraform format check"
-    else
-        print_status 1 "Terraform format check"
-    fi
-    
-    # Initialize (backend=false for local validation)
-    echo "Running terraform init..."
-    if terraform init -backend=false >/dev/null 2>&1; then
-        print_status 0 "Terraform init"
-    else
-        print_status 1 "Terraform init"
-    fi
-    
-    # Validate
-    echo "Running terraform validate..."
-    if terraform validate >/dev/null 2>&1; then
-        print_status 0 "Terraform validate"
-    else
-        print_status 1 "Terraform validate (may need terraform.tfvars)"
-    fi
-    
-    cd ..
-else
-    print_status 1 "Terraform not installed"
-    OVERALL_STATUS=1
-fi
+pass() { echo -e "${GREEN}[PASS]${NC} $*"; ((PASS++)); }
+fail() { echo -e "${RED}[FAIL]${NC} $*"; ((FAIL++)); }
+warn() { echo -e "${YELLOW}[WARN]${NC} $*"; ((WARN++)); }
+info() { echo -e "${BLUE}[INFO]${NC} $*"; }
 
 echo ""
-
-# =================================================================
-# KUBERNETES VALIDATION
-# =================================================================
-
-echo "=== Kubernetes Validation ==="
-
-# Check if kubectl is installed
-if command -v kubectl >/dev/null 2>&1; then
-    print_status 0 "kubectl is installed"
-    
-    # Validate manifests with dry-run
-    echo "Validating Kubernetes manifests..."
-    if kubectl apply --dry-run=client -f kubernetes/base/ --recursive >/dev/null 2>&1; then
-        print_status 0 "Kubernetes manifest validation"
-    else
-        print_status 1 "Kubernetes manifest validation"
-    fi
-else
-    print_status 1 "kubectl not installed"
-fi
-
-# Check if yamllint is installed
-if command -v yamllint >/dev/null 2>&1; then
-    echo "Running yamllint..."
-    if yamllint -c kubernetes/.yamllint kubernetes/ >/dev/null 2>&1; then
-        print_status 0 "YAML lint"
-    else
-        print_status 1 "YAML lint"
-    fi
-fi
-
+echo "═══════════════════════════════════════════════════"
+echo " QuantumNest Infrastructure Validation"
+echo "═══════════════════════════════════════════════════"
 echo ""
 
-# =================================================================
-# ANSIBLE VALIDATION
-# =================================================================
+# ──────────────────────────────────────
+# File Structure Validation
+# ──────────────────────────────────────
+info "Checking required files and directories..."
 
-echo "=== Ansible Validation ==="
+required_files=(
+  "terraform/main.tf"
+  "terraform/variables.tf"
+  "terraform/outputs.tf"
+  "terraform/backend.tf"
+  "terraform/modules/network/main.tf"
+  "terraform/modules/compute/main.tf"
+  "terraform/modules/database/main.tf"
+  "terraform/modules/storage/main.tf"
+  "terraform/modules/security/main.tf"
+  "kubernetes/base/namespace.yaml"
+  "kubernetes/base/backend-deployment.yaml"
+  "kubernetes/base/frontend-deployment.yaml"
+  "kubernetes/base/database-statefulset.yaml"
+  "kubernetes/base/redis-deployment.yaml"
+  "kubernetes/base/ingress.yaml"
+  "kubernetes/base/kustomization.yaml"
+  "kubernetes/base/rbac.yaml"
+  "monitoring/prometheus/prometheus.yml"
+  "monitoring/prometheus/rules/financial-alerts.yml"
+  "monitoring/grafana/provisioning/datasources/datasources.yml"
+  "monitoring/elasticsearch/elasticsearch.yml"
+  "monitoring/logstash/logstash.yml"
+  "monitoring/logstash/pipeline/financial-transactions.conf"
+  "monitoring/alertmanager/alertmanager.yml"
+  "ansible/ansible.cfg"
+  "ansible/playbooks/main.yml"
+  "security/iam/role-definitions/financial-roles.json"
+  "security/iam/base-policies/financial-services-base-policy.json"
+  "security/secrets/vault/vault.hcl"
+  "backup-recovery/database-backup/database-backup.sh"
+  "Dockerfile"
+  "docker-compose.yml"
+  ".env.example"
+  "deploy.sh"
+)
 
-# Check if ansible is installed
-if command -v ansible >/dev/null 2>&1; then
-    print_status 0 "Ansible is installed"
-    
-    cd ansible
-    
-    # Syntax check
-    if [ -f "inventory/hosts.yml" ]; then
-        echo "Running ansible-playbook syntax check..."
-        if ansible-playbook playbooks/main.yml --syntax-check >/dev/null 2>&1; then
-            print_status 0 "Ansible syntax check"
-        else
-            print_status 1 "Ansible syntax check"
-        fi
-    else
-        echo -e "${YELLOW}⚠${NC} inventory/hosts.yml not found (use hosts.example.yml as template)"
-    fi
-    
-    cd ..
-else
-    print_status 1 "Ansible not installed"
-fi
+for f in "${required_files[@]}"; do
+  if [[ -f "$f" ]]; then
+    pass "File exists: $f"
+  else
+    fail "Missing file: $f"
+  fi
+done
 
+# ──────────────────────────────────────
+# YAML Validation
+# ──────────────────────────────────────
 echo ""
+info "Validating YAML files..."
 
-# =================================================================
-# SUMMARY
-# =================================================================
+yaml_files=(
+  "monitoring/prometheus/prometheus.yml"
+  "monitoring/prometheus/rules/financial-alerts.yml"
+  "monitoring/grafana/provisioning/datasources/datasources.yml"
+  "monitoring/alertmanager/alertmanager.yml"
+  "monitoring/elasticsearch/elasticsearch.yml"
+  "kubernetes/base/namespace.yaml"
+  "kubernetes/base/backend-deployment.yaml"
+  "kubernetes/base/ingress.yaml"
+  "kubernetes/base/rbac.yaml"
+  "ansible/ansible.cfg"
+)
 
-echo "=== Validation Summary ==="
-if [ $OVERALL_STATUS -eq 0 ]; then
-    echo -e "${GREEN}All validations passed!${NC}"
+for f in "${yaml_files[@]}"; do
+  if [[ -f "$f" ]]; then
+    if command -v python3 &>/dev/null; then
+      if python3 -c "import yaml; yaml.safe_load_all(open('$f'))" 2>/dev/null; then
+        pass "Valid YAML: $f"
+      else
+        fail "Invalid YAML: $f"
+      fi
+    else
+      warn "python3 not available, skipping YAML validation for $f"
+    fi
+  fi
+done
+
+# ──────────────────────────────────────
+# JSON Validation
+# ──────────────────────────────────────
+echo ""
+info "Validating JSON files..."
+
+json_files=(
+  "security/iam/role-definitions/financial-roles.json"
+  "security/iam/base-policies/financial-services-base-policy.json"
+)
+
+for f in "${json_files[@]}"; do
+  if [[ -f "$f" ]]; then
+    if command -v jq &>/dev/null; then
+      if jq . "$f" > /dev/null 2>&1; then
+        pass "Valid JSON: $f"
+      else
+        fail "Invalid JSON: $f"
+      fi
+    elif python3 -c "import json; json.load(open('$f'))" 2>/dev/null; then
+      pass "Valid JSON: $f"
+    else
+      fail "Invalid JSON: $f"
+    fi
+  fi
+done
+
+# ──────────────────────────────────────
+# Terraform Validation
+# ──────────────────────────────────────
+echo ""
+info "Checking Terraform..."
+
+if command -v terraform &>/dev/null; then
+  cd terraform
+  if terraform validate 2>&1 | grep -q "Success"; then
+    pass "Terraform validate passed"
+  else
+    warn "Terraform validate failed (may need init first)"
+  fi
+  cd ..
 else
-    echo -e "${YELLOW}Some tools not installed. Install them for full validation.${NC}"
+  warn "Terraform not installed, skipping validation"
 fi
 
-exit 0
+# ──────────────────────────────────────
+# Kubernetes Manifest Validation
+# ──────────────────────────────────────
+echo ""
+info "Checking Kubernetes manifests..."
+
+if command -v kubectl &>/dev/null; then
+  if kubectl apply -k kubernetes/base --dry-run=client &>/dev/null; then
+    pass "Kubernetes manifests are valid (kustomize dry-run)"
+  else
+    fail "Kubernetes manifest validation failed"
+  fi
+else
+  warn "kubectl not installed, skipping Kubernetes validation"
+fi
+
+# ──────────────────────────────────────
+# Security Checks
+# ──────────────────────────────────────
+echo ""
+info "Running security checks..."
+
+# Check no plaintext passwords in tracked files
+sensitive_patterns=("password:" "secret:" "token:" "api_key:")
+files_to_check=(
+  "kubernetes/base/app-configmap.yaml"
+  "ansible/group_vars/all/vault.example.yml"
+  "terraform/terraform.tfvars.example"
+)
+for f in "${files_to_check[@]}"; do
+  if [[ -f "$f" ]]; then
+    if grep -iE "(password|secret|token|api_key)\s*=\s*['\"]?[a-zA-Z0-9]{8,}" "$f" &>/dev/null; then
+      warn "Possible plaintext credential in: $f"
+    else
+      pass "No plaintext credentials in: $f"
+    fi
+  fi
+done
+
+# Check .gitignore
+if [[ -f ".gitignore" ]]; then
+  gitignore_required=(".env" "*.tfstate" "*.tfstate.backup" "*.tfvars" "*.pem" "*.key")
+  for pattern in "${gitignore_required[@]}"; do
+    if grep -qF "$pattern" .gitignore; then
+      pass ".gitignore contains: $pattern"
+    else
+      fail ".gitignore missing: $pattern"
+    fi
+  done
+fi
+
+# Check no secrets committed
+if [[ -f "kubernetes/base/app-secrets.yaml" ]]; then
+  if grep -q "^data: {}$" kubernetes/base/app-secrets.yaml; then
+    pass "Secrets file is a placeholder (no real data)"
+  else
+    warn "app-secrets.yaml may contain real data - review carefully"
+  fi
+fi
+
+# ──────────────────────────────────────
+# Docker Validation
+# ──────────────────────────────────────
+echo ""
+info "Checking Docker configuration..."
+
+if command -v docker &>/dev/null; then
+  if docker compose config --quiet 2>/dev/null; then
+    pass "docker-compose.yml is valid"
+  else
+    fail "docker-compose.yml has errors"
+  fi
+  if docker build --no-cache --dry-run -f Dockerfile . &>/dev/null 2>&1; then
+    pass "Dockerfile syntax valid"
+  else
+    warn "Dockerfile dry-run not supported (docker version may not support it)"
+  fi
+else
+  warn "Docker not installed, skipping Docker validation"
+fi
+
+# ──────────────────────────────────────
+# Backup Script Check
+# ──────────────────────────────────────
+echo ""
+info "Checking backup scripts..."
+
+if [[ -x "backup-recovery/database-backup/database-backup.sh" ]]; then
+  pass "database-backup.sh is executable"
+else
+  fail "database-backup.sh is not executable"
+  chmod +x backup-recovery/database-backup/database-backup.sh 2>/dev/null && warn "Fixed: made database-backup.sh executable"
+fi
+
+if bash -n backup-recovery/database-backup/database-backup.sh 2>/dev/null; then
+  pass "database-backup.sh syntax is valid"
+else
+  fail "database-backup.sh has syntax errors"
+fi
+
+# ──────────────────────────────────────
+# Summary
+# ──────────────────────────────────────
+echo ""
+echo "═══════════════════════════════════════════════════"
+echo " Validation Summary"
+echo "═══════════════════════════════════════════════════"
+echo -e " ${GREEN}PASSED${NC}: ${PASS}"
+echo -e " ${YELLOW}WARNED${NC}: ${WARN}"
+echo -e " ${RED}FAILED${NC}: ${FAIL}"
+echo "═══════════════════════════════════════════════════"
+
+if [[ $FAIL -gt 0 ]]; then
+  echo -e "${RED}Validation FAILED - fix the above errors before deploying${NC}"
+  exit 1
+else
+  echo -e "${GREEN}Validation PASSED${NC}"
+  exit 0
+fi

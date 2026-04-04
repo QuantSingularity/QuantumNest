@@ -1,62 +1,57 @@
 ---
-# QuantumNest Common Role - Enhanced for Financial Services Security and Compliance
-# This role implements comprehensive security hardening, compliance controls,
-# and monitoring for all QuantumNest infrastructure components
+# QuantumNest Common Role - Financial Services Security and Compliance
 
 - name: Update system packages
-  package:
+  ansible.builtin.package:
     name: "*"
     state: latest
-  become: yes
+  become: true
   tags:
     - security
     - updates
 
 - name: Install essential security packages
-  package:
+  ansible.builtin.package:
     name:
       - fail2ban
       - aide
-      - rkhunter
-      - chkrootkit
       - auditd
       - rsyslog
       - logrotate
       - chrony
-      - unattended-upgrades
       - ufw
+      - rkhunter
       - clamav
       - clamav-daemon
-      - tripwire
-      - lynis
       - osquery
+      - unattended-upgrades
     state: present
-  become: yes
+  become: true
   tags:
     - security
     - packages
 
 - name: Configure automatic security updates
-  template:
+  ansible.builtin.template:
     src: 50unattended-upgrades.j2
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
     owner: root
     group: root
     mode: "0644"
-  become: yes
+  become: true
   notify: restart unattended-upgrades
   tags:
     - security
     - updates
 
 - name: Enable and configure auditd for compliance logging
-  template:
+  ansible.builtin.template:
     src: audit.rules.j2
-    dest: /etc/audit/rules.d/audit.rules
+    dest: /etc/audit/rules.d/quantumnest.rules
     owner: root
     group: root
     mode: "0640"
-  become: yes
+  become: true
   notify: restart auditd
   tags:
     - security
@@ -64,455 +59,231 @@
     - logging
 
 - name: Configure auditd main configuration
-  template:
+  ansible.builtin.template:
     src: auditd.conf.j2
     dest: /etc/audit/auditd.conf
     owner: root
     group: root
     mode: "0640"
-  become: yes
+  become: true
   notify: restart auditd
   tags:
     - security
     - compliance
 
+- name: Ensure auditd is enabled and running
+  ansible.builtin.systemd:
+    name: auditd
+    state: started
+    enabled: true
+  become: true
+  tags:
+    - security
+    - compliance
+
 - name: Configure rsyslog for centralized logging
-  template:
+  ansible.builtin.template:
     src: rsyslog.conf.j2
-    dest: /etc/rsyslog.conf
+    dest: /etc/rsyslog.d/99-quantumnest.conf
     owner: root
     group: root
     mode: "0644"
-  become: yes
+  become: true
   notify: restart rsyslog
   tags:
     - logging
-    - compliance
 
-- name: Configure logrotate for audit logs
-  template:
-    src: audit-logrotate.j2
-    dest: /etc/logrotate.d/audit
+- name: Ensure rsyslog is enabled and running
+  ansible.builtin.systemd:
+    name: rsyslog
+    state: started
+    enabled: true
+  become: true
+  tags:
+    - logging
+
+- name: Configure chrony for time synchronization
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
     owner: root
     group: root
     mode: "0644"
-  become: yes
+  become: true
+  notify: restart chrony
   tags:
-    - logging
+    - security
     - compliance
 
-- name: Harden SSH configuration
-  template:
+- name: Ensure chrony is enabled and running
+  ansible.builtin.systemd:
+    name: chronyd
+    state: started
+    enabled: true
+  become: true
+  tags:
+    - security
+
+- name: Set secure file permissions on sensitive directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "/etc/ssh", mode: "0700" }
+    - { path: "/etc/audit", mode: "0750" }
+    - { path: "/var/log", mode: "0755" }
+  become: true
+  tags:
+    - security
+    - hardening
+
+- name: Configure SSH hardening
+  ansible.builtin.template:
     src: sshd_config.j2
     dest: /etc/ssh/sshd_config
     owner: root
     group: root
     mode: "0600"
-    backup: yes
-  become: yes
+    validate: "/usr/sbin/sshd -t -f %s"
+  become: true
   notify: restart sshd
   tags:
     - security
-    - ssh
+    - hardening
 
-- name: Configure fail2ban for intrusion prevention
-  template:
-    src: jail.local.j2
-    dest: /etc/fail2ban/jail.local
+- name: Disable unnecessary kernel modules
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/quantumnest-blacklist.conf
+    content: |
+      install cramfs /bin/false
+      install freevxfs /bin/false
+      install jffs2 /bin/false
+      install hfs /bin/false
+      install hfsplus /bin/false
+      install squashfs /bin/false
+      install udf /bin/false
+      install dccp /bin/false
+      install sctp /bin/false
+      install rds /bin/false
+      install tipc /bin/false
     owner: root
     group: root
     mode: "0644"
-  become: yes
-  notify: restart fail2ban
+  become: true
   tags:
     - security
-    - intrusion-prevention
+    - hardening
 
-- name: Configure firewall (UFW) with default deny
-  ufw:
+- name: Configure sysctl for security hardening
+  ansible.builtin.template:
+    src: sysctl.conf.j2
+    dest: /etc/sysctl.d/99-quantumnest-security.conf
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: reload sysctl
+  tags:
+    - security
+    - hardening
+
+- name: Configure UFW firewall
+  ansible.builtin.ufw:
     state: enabled
     policy: deny
     direction: incoming
-  become: yes
+  become: true
   tags:
     - security
     - firewall
 
 - name: Allow SSH through firewall
-  ufw:
+  ansible.builtin.ufw:
     rule: allow
-    port: "{{ ssh_port | default('22') }}"
-    proto: tcp
-  become: yes
+    name: OpenSSH
+  become: true
   tags:
     - security
     - firewall
 
-- name: Allow application ports through firewall
-  ufw:
-    rule: allow
-    port: "{{ item }}"
-    proto: tcp
-  become: yes
-  loop: "{{ application_ports | default([]) }}"
-  tags:
-    - security
-    - firewall
-
-- name: Configure kernel parameters for security
-  sysctl:
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    state: present
-    reload: yes
-  become: yes
-  loop:
-    - { name: "net.ipv4.ip_forward", value: "0" }
-    - { name: "net.ipv4.conf.all.send_redirects", value: "0" }
-    - { name: "net.ipv4.conf.default.send_redirects", value: "0" }
-    - { name: "net.ipv4.conf.all.accept_source_route", value: "0" }
-    - { name: "net.ipv4.conf.default.accept_source_route", value: "0" }
-    - { name: "net.ipv4.conf.all.accept_redirects", value: "0" }
-    - { name: "net.ipv4.conf.default.accept_redirects", value: "0" }
-    - { name: "net.ipv4.conf.all.secure_redirects", value: "0" }
-    - { name: "net.ipv4.conf.default.secure_redirects", value: "0" }
-    - { name: "net.ipv4.conf.all.log_martians", value: "1" }
-    - { name: "net.ipv4.conf.default.log_martians", value: "1" }
-    - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: "1" }
-    - { name: "net.ipv4.icmp_ignore_bogus_error_responses", value: "1" }
-    - { name: "net.ipv4.tcp_syncookies", value: "1" }
-    - { name: "kernel.dmesg_restrict", value: "1" }
-    - { name: "kernel.kptr_restrict", value: "2" }
-    - { name: "kernel.yama.ptrace_scope", value: "1" }
-    - { name: "fs.suid_dumpable", value: "0" }
-  tags:
-    - security
-    - kernel
-
-- name: Set file permissions on sensitive files
-  file:
-    path: "{{ item.path }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    mode: "{{ item.mode }}"
-  become: yes
-  loop:
-    - { path: "/etc/passwd", owner: "root", group: "root", mode: "0644" }
-    - { path: "/etc/shadow", owner: "root", group: "shadow", mode: "0640" }
-    - { path: "/etc/group", owner: "root", group: "root", mode: "0644" }
-    - { path: "/etc/gshadow", owner: "root", group: "shadow", mode: "0640" }
-    - {
-        path: "/etc/ssh/sshd_config",
-        owner: "root",
-        group: "root",
-        mode: "0600",
-      }
-    - { path: "/etc/crontab", owner: "root", group: "root", mode: "0600" }
-    - { path: "/etc/cron.hourly", owner: "root", group: "root", mode: "0700" }
-    - { path: "/etc/cron.daily", owner: "root", group: "root", mode: "0700" }
-    - { path: "/etc/cron.weekly", owner: "root", group: "root", mode: "0700" }
-    - { path: "/etc/cron.monthly", owner: "root", group: "root", mode: "0700" }
-    - { path: "/etc/cron.d", owner: "root", group: "root", mode: "0700" }
-  tags:
-    - security
-    - permissions
-
-- name: Configure password policy
-  template:
-    src: pwquality.conf.j2
-    dest: /etc/security/pwquality.conf
+- name: Configure fail2ban
+  ansible.builtin.template:
+    src: fail2ban.local.j2
+    dest: /etc/fail2ban/jail.local
     owner: root
     group: root
     mode: "0644"
-  become: yes
+  become: true
+  notify: restart fail2ban
   tags:
     - security
-    - password-policy
 
-- name: Configure login definitions
-  template:
-    src: login.defs.j2
-    dest: /etc/login.defs
-    owner: root
-    group: root
-    mode: "0644"
-  become: yes
-  tags:
-    - security
-    - password-policy
-
-- name: Install and configure AIDE (Advanced Intrusion Detection Environment)
-  block:
-    - name: Initialize AIDE database
-      command: aideinit
-      become: yes
-      creates: /var/lib/aide/aide.db.new
-
-    - name: Move AIDE database to production location
-      command: mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
-      become: yes
-      creates: /var/lib/aide/aide.db
-
-    - name: Configure AIDE cron job for daily checks
-      cron:
-        name: "AIDE integrity check"
-        minute: "0"
-        hour: "2"
-        job: "/usr/bin/aide --check"
-        user: root
-      become: yes
-  tags:
-    - security
-    - integrity-monitoring
-
-- name: Configure ClamAV antivirus
-  block:
-    - name: Update ClamAV virus definitions
-      command: freshclam
-      become: yes
-      ignore_errors: yes
-
-    - name: Configure ClamAV daemon
-      template:
-        src: clamd.conf.j2
-        dest: /etc/clamav/clamd.conf
-        owner: root
-        group: root
-        mode: "0644"
-      become: yes
-      notify: restart clamav-daemon
-
-    - name: Configure daily ClamAV scan
-      cron:
-        name: "ClamAV daily scan"
-        minute: "0"
-        hour: "3"
-        job: "/usr/bin/clamscan -r --bell -i /home /var /opt"
-        user: root
-      become: yes
-  tags:
-    - security
-    - antivirus
-
-- name: Configure time synchronization with chrony
-  template:
-    src: chrony.conf.j2
-    dest: /etc/chrony/chrony.conf
-    owner: root
-    group: root
-    mode: "0644"
-  become: yes
-  notify: restart chrony
-  tags:
-    - security
-    - time-sync
-
-- name: Install and configure osquery for endpoint monitoring
-  block:
-    - name: Add osquery repository key
-      apt_key:
-        url: https://pkg.osquery.io/deb/pubkey.gpg
-        state: present
-      become: yes
-
-    - name: Add osquery repository
-      apt_repository:
-        repo: "deb [arch=amd64] https://pkg.osquery.io/deb deb main"
-        state: present
-      become: yes
-
-    - name: Install osquery
-      package:
-        name: osquery
-        state: present
-      become: yes
-
-    - name: Configure osquery
-      template:
-        src: osquery.conf.j2
-        dest: /etc/osquery/osquery.conf
-        owner: root
-        group: root
-        mode: "0644"
-      become: yes
-      notify: restart osqueryd
-  tags:
-    - security
-    - monitoring
-
-- name: Configure compliance monitoring scripts
-  template:
-    src: "{{ item }}.j2"
-    dest: "/usr/local/bin/{{ item }}"
-    owner: root
-    group: root
-    mode: "0755"
-  become: yes
-  loop:
-    - compliance-check.sh
-    - security-audit.sh
-    - backup-verify.sh
-  tags:
-    - compliance
-    - monitoring
-
-- name: Schedule compliance checks
-  cron:
-    name: "{{ item.name }}"
-    minute: "{{ item.minute }}"
-    hour: "{{ item.hour }}"
-    job: "{{ item.job }}"
-    user: root
-  become: yes
-  loop:
-    - {
-        name: "Daily compliance check",
-        minute: "0",
-        hour: "1",
-        job: "/usr/local/bin/compliance-check.sh",
-      }
-    - {
-        name: "Weekly security audit",
-        minute: "0",
-        hour: "2",
-        job: "/usr/local/bin/security-audit.sh",
-        weekday: "0",
-      }
-    - {
-        name: "Daily backup verification",
-        minute: "30",
-        hour: "4",
-        job: "/usr/local/bin/backup-verify.sh",
-      }
-  tags:
-    - compliance
-    - monitoring
-
-- name: Configure log forwarding to central SIEM
-  template:
-    src: rsyslog-siem.conf.j2
-    dest: /etc/rsyslog.d/50-siem.conf
-    owner: root
-    group: root
-    mode: "0644"
-  become: yes
-  notify: restart rsyslog
-  when: siem_server is defined
-  tags:
-    - logging
-    - siem
-
-- name: Create security incident response scripts
-  template:
-    src: "{{ item }}.j2"
-    dest: "/usr/local/bin/{{ item }}"
-    owner: root
-    group: root
-    mode: "0755"
-  become: yes
-  loop:
-    - incident-response.sh
-    - forensic-collection.sh
-    - emergency-lockdown.sh
-  tags:
-    - security
-    - incident-response
-
-- name: Configure system banners for compliance
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: root
-    group: root
-    mode: "0644"
-  become: yes
-  loop:
-    - { src: "issue.j2", dest: "/etc/issue" }
-    - { src: "issue.net.j2", dest: "/etc/issue.net" }
-    - { src: "motd.j2", dest: "/etc/motd" }
-  tags:
-    - compliance
-    - banners
-
-- name: Disable unnecessary services
-  systemd:
-    name: "{{ item }}"
-    state: stopped
-    enabled: no
-  become: yes
-  loop:
-    - avahi-daemon
-    - cups
-    - bluetooth
-    - rpcbind
-    - nfs-common
-  ignore_errors: yes
-  tags:
-    - security
-    - services
-
-- name: Enable and start security services
-  systemd:
-    name: "{{ item }}"
+- name: Ensure fail2ban is enabled and running
+  ansible.builtin.systemd:
+    name: fail2ban
     state: started
-    enabled: yes
-  become: yes
-  loop:
-    - auditd
-    - fail2ban
-    - ufw
-    - chrony
-    - clamav-daemon
-    - osqueryd
-    - rsyslog
+    enabled: true
+  become: true
   tags:
     - security
-    - services
 
-- name: Create compliance reporting directory
-  file:
-    path: /var/log/compliance
+- name: Initialize AIDE database (first run)
+  ansible.builtin.command:
+    cmd: aide --init
+    creates: /var/lib/aide/aide.db.new
+  become: true
+  tags:
+    - security
+    - compliance
+  when: ansible_run_tags | intersect(['security', 'all']) | length > 0
+
+- name: Move AIDE initial database into place
+  ansible.builtin.copy:
+    src: /var/lib/aide/aide.db.new
+    dest: /var/lib/aide/aide.db
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0600"
+  become: true
+  tags:
+    - security
+    - compliance
+
+- name: Schedule periodic AIDE checks
+  ansible.builtin.cron:
+    name: "AIDE integrity check"
+    minute: "0"
+    hour: "2"
+    job: "/usr/bin/aide --check > /var/log/aide/aide-check.log 2>&1"
+    user: root
+  become: true
+  tags:
+    - security
+    - compliance
+
+- name: Configure ClamAV database updates
+  ansible.builtin.systemd:
+    name: clamav-freshclam
+    state: started
+    enabled: true
+  become: true
+  tags:
+    - security
+
+- name: Ensure log directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
     state: directory
     owner: root
     group: root
     mode: "0750"
-  become: yes
+  loop:
+    - /var/log/aide
+    - /var/log/quantumnest
+  become: true
   tags:
-    - compliance
     - logging
-
-- name: Configure file integrity monitoring
-  template:
-    src: aide.conf.j2
-    dest: /etc/aide/aide.conf
-    owner: root
-    group: root
-    mode: "0644"
-  become: yes
-  tags:
     - security
-    - integrity
-
-- name: Set up automated security updates notification
-  template:
-    src: security-updates-notify.sh.j2
-    dest: /usr/local/bin/security-updates-notify.sh
-    owner: root
-    group: root
-    mode: "0755"
-  become: yes
-  tags:
-    - security
-    - notifications
-
-- name: Configure security update notifications
-  cron:
-    name: "Security updates notification"
-    minute: "0"
-    hour: "8"
-    job: "/usr/local/bin/security-updates-notify.sh"
-    user: root
-  become: yes
-  tags:
-    - security
-    - notifications

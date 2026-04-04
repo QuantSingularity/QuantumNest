@@ -1,9 +1,6 @@
-# Production S3 Backend Configuration
-# Usage: terraform init -backend-config=backend-prod.hcl
-
 bucket         = "quantumnest-terraform-state-prod"
-key            = "infrastructure/terraform.tfstate"
+key            = "infrastructure/prod/terraform.tfstate"
 region         = "us-west-2"
 encrypt        = true
-kms_key_id     = "alias/terraform-state-key"
+kms_key_id     = "alias/quantumnest-terraform-state"
 dynamodb_table = "quantumnest-terraform-locks"

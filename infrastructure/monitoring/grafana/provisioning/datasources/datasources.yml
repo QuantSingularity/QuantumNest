@@ -1,75 +1,68 @@
-# Grafana Configuration for QuantumNest Financial Platform
-
 apiVersion: 1
 
-# Data sources configuration
 datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
-    url: https://prometheus.quantumnest.internal:9090
+    url: http://prometheus:9090
     isDefault: true
     jsonData:
-      tlsAuth: true
-      tlsAuthWithCACert: true
-      tlsSkipVerify: false
       httpMethod: POST
-    secureJsonData:
-      tlsCACert: |
-        -----BEGIN CERTIFICATE-----
-        # CA Certificate content
-        -----END CERTIFICATE-----
-      tlsClientCert: |
-        -----BEGIN CERTIFICATE-----
-        # Client Certificate content
-        -----END CERTIFICATE-----
-      tlsClientKey: |
-        -----BEGIN PRIVATE KEY-----
-        # Client Private Key content
-        -----END PRIVATE KEY-----
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      exemplarTraceIdDestinations:
+        - name: traceID
+          datasourceUid: jaeger
+    version: 1
+    editable: false
 
   - name: Elasticsearch
     type: elasticsearch
     access: proxy
-    url: https://elasticsearch.quantumnest.internal:9200
+    url: http://elasticsearch:9200
     database: "logstash-*"
     jsonData:
       interval: Daily
       timeField: "@timestamp"
-      esVersion: "7.10.0"
-      tlsAuth: true
-      tlsAuthWithCACert: true
-    secureJsonData:
-      tlsCACert: |
-        -----BEGIN CERTIFICATE-----
-        # Elasticsearch CA Certificate
-        -----END CERTIFICATE-----
-      tlsClientCert: |
-        -----BEGIN CERTIFICATE-----
-        # Elasticsearch Client Certificate
-        -----END CERTIFICATE-----
-      tlsClientKey: |
-        -----BEGIN PRIVATE KEY-----
-        # Elasticsearch Client Key
-        -----END PRIVATE KEY-----
+      esVersion: "8.0.0"
+      logMessageField: message
+      logLevelField: level
+      dataLinks:
+        - field: "transaction.transaction_id"
+          url: "/explore?left={\"datasource\":\"Prometheus\",\"queries\":[{\"expr\":\"financial_transaction_info{transaction_id=\\\"${__value.raw}\\\"\"}\"}"
+    version: 1
+    editable: false
 
   - name: Jaeger
     type: jaeger
     access: proxy
-    url: https://jaeger.quantumnest.internal:16686
+    url: http://jaeger:16686
+    uid: jaeger
     jsonData:
-      tlsAuth: true
-      tlsAuthWithCACert: true
+      tracesToLogs:
+        datasourceUid: Elasticsearch
+        filterByTraceID: true
+        filterBySpanID: false
+    version: 1
+    editable: false
 
-# Dashboard providers
+  - name: AlertManager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    jsonData:
+      implementation: prometheus
+    version: 1
+    editable: false
+
 providers:
   - name: "financial-dashboards"
     orgId: 1
     folder: "Financial Services"
     type: file
-    disableDeletion: false
-    updateIntervalSeconds: 10
-    allowUiUpdates: true
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
     options:
       path: /var/lib/grafana/dashboards/financial
 
@@ -77,9 +70,9 @@ providers:
     orgId: 1
     folder: "Infrastructure"
     type: file
-    disableDeletion: false
-    updateIntervalSeconds: 10
-    allowUiUpdates: true
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
     options:
       path: /var/lib/grafana/dashboards/infrastructure
 
@@ -87,9 +80,9 @@ providers:
     orgId: 1
     folder: "Security & Compliance"
     type: file
-    disableDeletion: false
-    updateIntervalSeconds: 10
-    allowUiUpdates: true
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
     options:
       path: /var/lib/grafana/dashboards/security
 
@@ -97,8 +90,8 @@ providers:
     orgId: 1
     folder: "Compliance Reports"
     type: file
-    disableDeletion: false
-    updateIntervalSeconds: 10
-    allowUiUpdates: true
+    disableDeletion: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
     options:
       path: /var/lib/grafana/dashboards/compliance

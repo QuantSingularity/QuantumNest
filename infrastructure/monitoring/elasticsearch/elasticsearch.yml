@@ -1,16 +1,15 @@
 # Elasticsearch Configuration for QuantumNest Financial Platform
-# elasticsearch.yml
 
 cluster.name: quantumnest-logging-cluster
 node.name: ${HOSTNAME}
-node.roles: [master, data, ingest, ml, remote_cluster_client]
+node.roles: [master, data, ingest, remote_cluster_client]
 
 # Network settings
 network.host: 0.0.0.0
 http.port: 9200
 transport.port: 9300
 
-# Discovery settings for cluster
+# Discovery settings
 discovery.seed_hosts:
   - elasticsearch-master-0.elasticsearch-master.elastic-system.svc.cluster.local
   - elasticsearch-master-1.elasticsearch-master.elastic-system.svc.cluster.local
@@ -48,59 +47,44 @@ xpack.security.audit.logfile.events.include:
   - run_as_denied
   - run_as_granted
 
-xpack.security.audit.logfile.events.exclude: []
-xpack.security.audit.logfile.events.emit_request_body: true
+xpack.security.audit.logfile.events.emit_request_body: false
 
-# Machine Learning settings
-xpack.ml.enabled: true
-xpack.ml.max_machine_memory_percent: 30
+# Machine Learning (disable ml role on non-ml nodes to save memory)
+xpack.ml.enabled: false
 
-# Monitoring
-xpack.monitoring.enabled: true
-xpack.monitoring.collection.enabled: true
-xpack.monitoring.exporters:
-  prometheus:
-    type: http
-    host: ["https://prometheus.quantumnest.internal:9090"]
-    auth:
-      username: elasticsearch_exporter
-      password: ${ELASTICSEARCH_EXPORTER_PASSWORD}
-    ssl:
-      certificate_authorities: ["/usr/share/elasticsearch/config/certs/ca.crt"]
-      certificate: "/usr/share/elasticsearch/config/certs/client.crt"
-      key: "/usr/share/elasticsearch/config/certs/client.key"
+# Monitoring - use Prometheus exporter sidecar instead of internal exporter
+xpack.monitoring.enabled: false
+xpack.monitoring.collection.enabled: false
 
-# Index settings for financial data
+# Index settings
 index.number_of_shards: 3
-index.number_of_replicas: 2
-index.refresh_interval: 5s
+index.number_of_replicas: 1
 
 # Memory and performance settings
 indices.memory.index_buffer_size: 20%
 indices.memory.min_index_buffer_size: 96mb
-indices.fielddata.cache.size: 40%
+indices.fielddata.cache.size: 20%
 indices.queries.cache.size: 10%
 indices.requests.cache.size: 2%
+indices.breaker.fielddata.limit: 40%
+indices.breaker.request.limit: 30%
+indices.breaker.total.limit: 70%
 
 # Thread pool settings
 thread_pool.write.queue_size: 1000
 thread_pool.search.queue_size: 1000
-thread_pool.get.queue_size: 1000
 
 # Cluster settings
 cluster.routing.allocation.disk.threshold_enabled: true
-cluster.routing.allocation.disk.watermark.low: 85%
-cluster.routing.allocation.disk.watermark.high: 90%
-cluster.routing.allocation.disk.watermark.flood_stage: 95%
+cluster.routing.allocation.disk.watermark.low: 80%
+cluster.routing.allocation.disk.watermark.high: 85%
+cluster.routing.allocation.disk.watermark.flood_stage: 90%
 
 # Index lifecycle management
 xpack.ilm.enabled: true
 
 # Watcher for alerting
 xpack.watcher.enabled: true
-
-# Graph exploration
-xpack.graph.enabled: true
 
 # SQL support
 xpack.sql.enabled: true
@@ -111,18 +95,16 @@ xpack.ccr.enabled: true
 # Snapshot and restore settings
 path.repo: ["/usr/share/elasticsearch/backup"]
 
-# JVM heap size (set via environment variables)
-# ES_JAVA_OPTS: "-Xms2g -Xmx2g"
+# Financial services compliance settings
+action.destructive_requires_name: true
 
-# Logging configuration
+# Logging
 logger.org.elasticsearch.deprecation: warn
 logger.org.elasticsearch.transport.netty4: warn
 logger.org.elasticsearch.http.netty4: warn
-logger.org.elasticsearch.cluster.coordination: info
-logger.org.elasticsearch.cluster.service: info
 
-# Financial services specific settings
-action.destructive_requires_name: true
-cluster.blocks.read_only_allow_delete: false
-# Custom index templates for financial data
-# These will be applied via API calls during setup
+# Slow log thresholds
+index.search.slowlog.threshold.query.warn: 10s
+index.search.slowlog.threshold.query.info: 5s
+index.indexing.slowlog.threshold.index.warn: 10s
+index.indexing.slowlog.threshold.index.info: 5s

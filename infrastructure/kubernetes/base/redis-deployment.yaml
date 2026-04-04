@@ -1,32 +1,69 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ .Values.appName }}-redis"
+  name: quantumnest-redis
+  namespace: quantumnest-prod
   labels:
-    app: "{{ .Values.appName }}-redis"
+    app: quantumnest-redis
+    tier: cache
+    app.kubernetes.io/name: quantumnest-redis
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: quantumnest-platform
 spec:
-  replicas: "{{ .Values.redis.replicas }}"
+  replicas: 1
   selector:
     matchLabels:
-      app: "{{ .Values.appName }}-redis"
+      app: quantumnest-redis
   template:
     metadata:
       labels:
-        app: "{{ .Values.appName }}-redis"
+        app: quantumnest-redis
+        tier: cache
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9121"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
       containers:
-        - name: "{{ .Values.appName }}-redis"
-          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
-          imagePullPolicy: "{{ .Values.redis.image.pullPolicy }}"
+        - name: quantumnest-redis
+          image: redis:7-alpine
+          imagePullPolicy: IfNotPresent
+          command:
+            - redis-server
+            - /etc/redis/redis.conf
           ports:
-            - containerPort: "{{ .Values.redis.containerPort }}"
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
           resources:
             limits:
-              cpu: "{{ .Values.redis.resources.limits.cpu }}"
-              memory: "{{ .Values.redis.resources.limits.memory }}"
+              cpu: "500m"
+              memory: "1Gi"
             requests:
-              cpu: "{{ .Values.redis.resources.requests.cpu }}"
-              memory: "{{ .Values.redis.resources.requests.memory }}"
+              cpu: "100m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 999
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: quantumnest-redis-data
+              mountPath: /data
+            - name: redis-config
+              mountPath: /etc/redis
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
           livenessProbe:
             exec:
               command:
@@ -34,6 +71,8 @@ spec:
                 - ping
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             exec:
               command:
@@ -41,10 +80,37 @@ spec:
                 - ping
             initialDelaySeconds: 5
             periodSeconds: 5
-          volumeMounts:
-            - name: "{{ .Values.appName }}-redis-data"
-              mountPath: /data
+            timeoutSeconds: 3
+            failureThreshold: 3
+        - name: redis-exporter
+          image: oliver006/redis_exporter:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 9121
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 59000
+            capabilities:
+              drop:
+                - ALL
       volumes:
-        - name: "{{ .Values.appName }}-redis-data"
+        - name: quantumnest-redis-data
           persistentVolumeClaim:
-            claimName: "{{ .Values.appName }}-redis-pvc"
+            claimName: quantumnest-redis-pvc
+        - name: redis-config
+          configMap:
+            name: quantumnest-redis-config
+        - name: tmp
+          emptyDir:
+            sizeLimit: 100Mi

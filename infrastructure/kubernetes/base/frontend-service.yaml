@@ -1,15 +1,19 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ .Values.appName }}-frontend"
+  name: quantumnest-frontend
+  namespace: quantumnest-prod
   labels:
-    app: "{{ .Values.appName }}-frontend"
+    app: quantumnest-frontend
+    tier: frontend
+    app.kubernetes.io/name: quantumnest-frontend
+    app.kubernetes.io/component: frontend
 spec:
-  type: "{{ .Values.frontend.service.type }}"
-  ports:
-    - port: "{{ .Values.frontend.servicePort }}"
-      targetPort: "{{ .Values.frontend.containerPort }}"
-      protocol: TCP
-      name: http
+  type: ClusterIP
   selector:
-    app: "{{ .Values.appName }}-frontend"
+    app: quantumnest-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP

@@ -1,0 +1,66 @@
+# AlertManager Configuration for QuantumNest Financial Platform
+global:
+  resolve_timeout: 5m
+  smtp_from: "alerts@quantumnest.com"
+  smtp_require_tls: true
+
+inhibit_rules:
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ["alertname", "cluster", "service"]
+
+route:
+  group_by: ["alertname", "cluster", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: default-receiver
+
+  routes:
+    - match:
+        severity: critical
+        category: financial
+      receiver: financial-critical
+      repeat_interval: 1h
+      continue: true
+
+    - match:
+        severity: critical
+        category: security
+      receiver: security-team
+      repeat_interval: 30m
+      continue: true
+
+    - match:
+        severity: critical
+      receiver: oncall-pagerduty
+      repeat_interval: 1h
+
+receivers:
+  - name: default-receiver
+    email_configs:
+      - to: "platform-team@quantumnest.com"
+        send_resolved: true
+
+  - name: financial-critical
+    email_configs:
+      - to: "financial-ops@quantumnest.com,cto@quantumnest.com"
+        send_resolved: true
+    slack_configs:
+      - api_url: "${SLACK_FINANCIAL_WEBHOOK_URL}"
+        channel: "#financial-alerts"
+        title: "Financial Alert: {{ .GroupLabels.alertname }}"
+        send_resolved: true
+
+  - name: security-team
+    email_configs:
+      - to: "security@quantumnest.com"
+        send_resolved: true
+
+  - name: oncall-pagerduty
+    pagerduty_configs:
+      - routing_key: "${PAGERDUTY_ROUTING_KEY}"
+        description: "{{ .GroupLabels.alertname }}"
+        severity: "{{ .GroupLabels.severity }}"

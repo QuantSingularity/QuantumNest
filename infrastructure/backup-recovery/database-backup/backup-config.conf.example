@@ -1,0 +1,14 @@
+# QuantumNest Database Backup Configuration
+# Copy to backup-config.conf and fill in values
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=quantumnest_prod
+DB_USER=backup_user
+DB_PASSWORD=changeme
+
+BACKUP_DIR=/var/backups/quantumnest
+S3_BUCKET=quantumnest-backups-prod
+ENCRYPTION_KEY_ID=arn:aws:kms:us-west-2:ACCOUNT_ID:key/KEY_ID
+RETENTION_DAYS=2555
+BACKUP_TYPE=full

@@ -1,29 +1,26 @@
 ---
-# roles/webserver/tasks/main.yml
-- name: Install web server packages
-  yum:
+- name: Install nginx
+  ansible.builtin.package:
     name:
       - nginx
-      - nodejs
-      - npm
+      - nginx-extras
     state: present
+  become: true
 
-- name: Create web application directory
-  file:
-    path: /var/www/{{ app_name }}
-    state: directory
-    owner: nginx
-    group: nginx
-    mode: "0755"
-
-- name: Configure Nginx
-  template:
+- name: Configure nginx
+  ansible.builtin.template:
     src: nginx.conf.j2
-    dest: /etc/nginx/conf.d/{{ app_name }}.conf
-  notify: Restart Nginx
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "/usr/sbin/nginx -t -c %s"
+  become: true
+  notify: reload nginx
 
-- name: Start and enable Nginx
-  systemd:
+- name: Ensure nginx is enabled and running
+  ansible.builtin.systemd:
     name: nginx
     state: started
-    enabled: yes
+    enabled: true
+  become: true

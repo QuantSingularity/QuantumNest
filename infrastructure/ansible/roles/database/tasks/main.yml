@@ -1,47 +1,37 @@
 ---
-# roles/database/tasks/main.yml
-- name: Install database packages
-  yum:
+- name: Install PostgreSQL packages
+  ansible.builtin.package:
     name:
-      - mariadb-server
-      - mariadb
-      - python3-PyMySQL
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - libpq-dev
     state: present
+  become: true
 
-- name: Configure MariaDB
-  template:
-    src: my.cnf.j2
-    dest: /etc/my.cnf.d/server.cnf
-  notify: Restart MariaDB
-
-- name: Start and enable MariaDB
-  systemd:
-    name: mariadb
+- name: Ensure PostgreSQL is enabled and running
+  ansible.builtin.systemd:
+    name: postgresql
     state: started
-    enabled: yes
+    enabled: true
+  become: true
 
-- name: Set root password
-  mysql_user:
-    name: root
-    password: "{{ db_root_password }}"
-    host_all: yes
-    state: present
-  no_log: true
+- name: Configure PostgreSQL
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/14/main/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  become: true
+  notify: reload postgresql
 
-- name: Create application database
-  mysql_db:
-    name: "{{ db_name }}"
-    state: present
-    login_user: root
-    login_password: "{{ db_root_password }}"
-
-- name: Create application database user
-  mysql_user:
-    name: "{{ db_user }}"
-    password: "{{ db_password }}"
-    priv: "{{ db_name }}.*:ALL"
-    host: "%"
-    state: present
-    login_user: root
-    login_password: "{{ db_root_password }}"
-  no_log: true
+- name: Configure pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/14/main/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  become: true
+  notify: reload postgresql

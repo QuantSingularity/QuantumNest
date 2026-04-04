@@ -1,48 +1,129 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ .Values.appName }}-frontend"
+  name: quantumnest-frontend
+  namespace: quantumnest-prod
   labels:
-    app: "{{ .Values.appName }}-frontend"
+    app: quantumnest-frontend
+    tier: frontend
+    app.kubernetes.io/name: quantumnest-frontend
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: quantumnest-platform
+    app.kubernetes.io/managed-by: argocd
 spec:
-  replicas: "{{ .Values.frontend.replicas }}"
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   selector:
     matchLabels:
-      app: "{{ .Values.appName }}-frontend"
+      app: quantumnest-frontend
   template:
     metadata:
       labels:
-        app: "{{ .Values.appName }}-frontend"
+        app: quantumnest-frontend
+        tier: frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - quantumnest-frontend
+                topologyKey: kubernetes.io/hostname
       containers:
-        - name: "{{ .Values.appName }}-frontend"
-          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
-          imagePullPolicy: "{{ .Values.frontend.image.pullPolicy }}"
+        - name: quantumnest-frontend
+          image: quantumnest/frontend:1.0.0
+          imagePullPolicy: Always
           ports:
-            - containerPort: "{{ .Values.frontend.containerPort }}"
+            - name: http
+              containerPort: 80
+              protocol: TCP
           resources:
             limits:
-              cpu: "{{ .Values.frontend.resources.limits.cpu }}"
-              memory: "{{ .Values.frontend.resources.limits.memory }}"
+              cpu: "500m"
+              memory: "512Mi"
+              ephemeral-storage: "1Gi"
             requests:
-              cpu: "{{ .Values.frontend.resources.requests.cpu }}"
-              memory: "{{ .Values.frontend.resources.requests.memory }}"
+              cpu: "100m"
+              memory: "128Mi"
+              ephemeral-storage: "256Mi"
           env:
             - name: REACT_APP_API_URL
-              value: "{{ .Values.frontend.apiUrl }}"
+              valueFrom:
+                configMapKeyRef:
+                  name: quantumnest-backend-config
+                  key: API_URL
             - name: REACT_APP_ENV
-              value: "{{ .Values.environment }}"
+              value: "production"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 101
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
           livenessProbe:
             httpGet:
               path: /
-              port: "{{ .Values.frontend.containerPort }}"
+              port: http
             initialDelaySeconds: 30
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
           readinessProbe:
             httpGet:
               path: /
-              port: "{{ .Values.frontend.containerPort }}"
+              port: http
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+      volumes:
+        - name: nginx-cache
+          emptyDir:
+            sizeLimit: 256Mi
+        - name: nginx-run
+          emptyDir:
+            sizeLimit: 32Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
       imagePullSecrets:
-        - name: "{{ .Values.imagePullSecrets }}"
+        - name: quantumnest-registry-secret
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: quantumnest-frontend-pdb
+  namespace: quantumnest-prod
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: quantumnest-frontend

@@ -6,6 +6,9 @@ metadata:
     name: quantumnest-prod
     environment: production
     compliance: pci-dss-sox-gdpr
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 ---
 apiVersion: v1
 kind: Namespace
@@ -14,6 +17,9 @@ metadata:
   labels:
     name: quantumnest-staging
     environment: staging
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 ---
 apiVersion: v1
 kind: Namespace
@@ -22,3 +28,6 @@ metadata:
   labels:
     name: quantumnest-dev
     environment: development
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: baseline
+    pod-security.kubernetes.io/warn: restricted
