@@ -4,7 +4,7 @@ import json
 import logging
 import secrets
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -87,7 +87,7 @@ class AdvancedAuthenticationSystem:
             password=self.settings.REDIS_PASSWORD,
             decode_responses=True,
         )
-        self.jwt_secret = self.settings.JWT_SECRET_KEY
+        self.jwt_secret = self.settings.SECRET_KEY
         self.jwt_algorithm = "HS256"
         self.access_token_expire = timedelta(hours=1)
         self.refresh_token_expire = timedelta(days=30)
@@ -155,7 +155,7 @@ class AdvancedAuthenticationSystem:
                     risk_score=1.0,
                     device_fingerprint=device_fingerprint,
                 )
-            if not self._verify_password(password, user.password_hash):
+            if not self._verify_password(password, user.hashed_password):
                 self._log_login_attempt(
                     user.id, email, ip_address, False, "Invalid password"
                 )
@@ -172,7 +172,7 @@ class AdvancedAuthenticationSystem:
                     risk_score=0.7,
                     device_fingerprint=device_fingerprint,
                 )
-            risk_score = await self._calculate_authentication_risk(
+            risk_score = self._calculate_authentication_risk(
                 user, device_fingerprint, ip_address, user_agent
             )
             requires_2fa = user.two_factor_enabled or (
@@ -194,7 +194,7 @@ class AdvancedAuthenticationSystem:
                     risk_score=risk_score,
                     device_fingerprint=device_fingerprint,
                 )
-            session_info = await self._create_session(
+            session_info = self._create_session(
                 user, device_fingerprint, ip_address, user_agent, risk_score
             )
             access_token = self._generate_access_token(user.id, session_info.session_id)
@@ -300,10 +300,10 @@ class AdvancedAuthenticationSystem:
                     risk_score=0.7,
                     device_fingerprint=device_fingerprint,
                 )
-            risk_score = await self._calculate_authentication_risk(
+            risk_score = self._calculate_authentication_risk(
                 user, device_fingerprint, ip_address, user_agent
             )
-            session_info = await self._create_session(
+            session_info = self._create_session(
                 user, device_fingerprint, ip_address, user_agent, risk_score
             )
             access_token = self._generate_access_token(user.id, session_info.session_id)
@@ -450,7 +450,7 @@ class AdvancedAuthenticationSystem:
             )
             if session:
                 session.status = SessionStatus.REVOKED
-                session.ended_at = datetime.utcnow()
+                session.ended_at = datetime.now(timezone.utc)
                 self.db.commit()
             self.logger.info(f"User logged out, session {session_id} revoked")
             return True
@@ -472,7 +472,7 @@ class AdvancedAuthenticationSystem:
             for session in sessions:
                 self._revoke_session(session.session_id)
                 session.status = SessionStatus.REVOKED
-                session.ended_at = datetime.utcnow()
+                session.ended_at = datetime.now(timezone.utc)
             self.db.commit()
             self.logger.info(f"All sessions revoked for user {user_id}")
             return True
@@ -532,8 +532,8 @@ class AdvancedAuthenticationSystem:
             "user_id": user_id,
             "session_id": session_id,
             "type": "access",
-            "exp": datetime.utcnow() + self.access_token_expire,
-            "iat": datetime.utcnow(),
+            "exp": datetime.now(timezone.utc) + self.access_token_expire,
+            "iat": datetime.now(timezone.utc),
         }
         return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
 
@@ -543,12 +543,12 @@ class AdvancedAuthenticationSystem:
             "user_id": user_id,
             "session_id": session_id,
             "type": "refresh",
-            "exp": datetime.utcnow() + self.refresh_token_expire,
-            "iat": datetime.utcnow(),
+            "exp": datetime.now(timezone.utc) + self.refresh_token_expire,
+            "iat": datetime.now(timezone.utc),
         }
         return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
 
-    async def _create_session(
+    def _create_session(
         self,
         user: User,
         device_fingerprint: str,
@@ -558,16 +558,16 @@ class AdvancedAuthenticationSystem:
     ) -> SessionInfo:
         """Create new user session"""
         session_id = secrets.token_urlsafe(32)
-        expires_at = datetime.utcnow() + self.session_expire
-        location = await self._get_location_from_ip(ip_address)
+        expires_at = datetime.now(timezone.utc) + self.session_expire
+        location = self._get_location_from_ip(ip_address)
         session = UserSession(
             session_id=session_id,
             user_id=user.id,
             device_fingerprint=device_fingerprint,
             ip_address=ip_address,
             user_agent=user_agent,
-            created_at=datetime.utcnow(),
-            last_activity=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            last_activity=datetime.now(timezone.utc),
             expires_at=expires_at,
             status=SessionStatus.ACTIVE,
             risk_score=risk_score,
@@ -580,8 +580,8 @@ class AdvancedAuthenticationSystem:
             "device_fingerprint": device_fingerprint,
             "ip_address": ip_address,
             "risk_score": risk_score,
-            "created_at": datetime.utcnow().isoformat(),
-            "last_activity": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_activity": datetime.now(timezone.utc).isoformat(),
         }
         self.redis_client.setex(
             f"session:{session_id}",
@@ -594,8 +594,8 @@ class AdvancedAuthenticationSystem:
             device_fingerprint=device_fingerprint,
             ip_address=ip_address,
             user_agent=user_agent,
-            created_at=datetime.utcnow(),
-            last_activity=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            last_activity=datetime.now(timezone.utc),
             expires_at=expires_at,
             status=SessionStatus.ACTIVE,
             risk_score=risk_score,
@@ -611,7 +611,7 @@ class AdvancedAuthenticationSystem:
             "user_id": str(user_id),
             "device_fingerprint": device_fingerprint,
             "ip_address": ip_address,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "type": "temp_2fa",
         }
         self.redis_client.setex(
@@ -650,7 +650,7 @@ class AdvancedAuthenticationSystem:
             session_data = self.redis_client.get(f"session:{session_id}")
             if session_data:
                 data = json.loads(session_data)
-                data["last_activity"] = datetime.utcnow().isoformat()
+                data["last_activity"] = datetime.now(timezone.utc).isoformat()
                 self.redis_client.setex(
                     f"session:{session_id}",
                     int(self.session_expire.total_seconds()),
@@ -662,7 +662,7 @@ class AdvancedAuthenticationSystem:
                     .first()
                 )
                 if session:
-                    session.last_activity = datetime.utcnow()
+                    session.last_activity = datetime.now(timezone.utc)
                     self.db.commit()
         except Exception as e:
             self.logger.error(f"Update session activity error: {str(e)}")
@@ -671,7 +671,7 @@ class AdvancedAuthenticationSystem:
         """Revoke session"""
         self.redis_client.delete(f"session:{session_id}")
 
-    async def _calculate_authentication_risk(
+    def _calculate_authentication_risk(
         self, user: User, device_fingerprint: str, ip_address: str, user_agent: str
     ) -> float:
         """Calculate authentication risk score"""
@@ -698,7 +698,7 @@ class AdvancedAuthenticationSystem:
             )
             if ip_sessions == 0:
                 risk_score += 0.2
-            current_hour = datetime.utcnow().hour
+            current_hour = datetime.now(timezone.utc).hour
             if current_hour < 6 or current_hour > 22:
                 risk_score += 0.1
             recent_failures = (
@@ -706,7 +706,8 @@ class AdvancedAuthenticationSystem:
                 .filter(
                     LoginAttempt.user_id == user.id,
                     LoginAttempt.success == False,
-                    LoginAttempt.timestamp > datetime.utcnow() - timedelta(hours=24),
+                    LoginAttempt.timestamp
+                    > datetime.now(timezone.utc) - timedelta(hours=24),
                 )
                 .count()
             )
@@ -717,7 +718,7 @@ class AdvancedAuthenticationSystem:
             self.logger.error(f"Risk calculation error: {str(e)}")
             return 0.5
 
-    async def _get_location_from_ip(self, ip_address: str) -> Optional[Dict[str, Any]]:
+    def _get_location_from_ip(self, ip_address: str) -> Optional[Dict[str, Any]]:
         """Get location from IP address (simplified)"""
         return {
             "country": "Unknown",
@@ -754,7 +755,8 @@ class AdvancedAuthenticationSystem:
                 .filter(
                     LoginAttempt.user_id == user_id,
                     LoginAttempt.success == False,
-                    LoginAttempt.timestamp > datetime.utcnow() - self.lockout_duration,
+                    LoginAttempt.timestamp
+                    > datetime.now(timezone.utc) - self.lockout_duration,
                 )
                 .count()
             )
@@ -778,7 +780,7 @@ class AdvancedAuthenticationSystem:
                 ip_address=ip_address,
                 success=success,
                 details=details,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
             )
             self.db.add(attempt)
             self.db.commit()
@@ -822,31 +824,61 @@ class AdvancedAuthenticationSystem:
         """Validate password strength"""
         issues = []
         score = 0
-        if len(password) < self.password_min_length:
+
+        # Common password check – fail immediately with score 0
+        if password.lower() in [
+            "password",
+            "123456",
+            "qwerty",
+            "admin",
+            "letmein",
+            "welcome",
+        ]:
+            issues.append("Password is too common")
+            strength_levels = ["Very Weak", "Weak", "Fair", "Good", "Strong"]
+            return {
+                "valid": False,
+                "strength": strength_levels[0],
+                "score": 0,
+                "issues": issues,
+            }
+
+        meets_length = len(password) >= self.password_min_length
+        if not meets_length:
             issues.append(
                 f"Password must be at least {self.password_min_length} characters long"
             )
-        else:
-            score += 1
-        if not any((c.isupper() for c in password)):
+            # If too short, don't award partial scores – keep it Very Weak
+            strength_levels = ["Very Weak", "Weak", "Fair", "Good", "Strong"]
+            return {
+                "valid": False,
+                "strength": strength_levels[0],
+                "score": 0,
+                "issues": issues,
+            }
+
+        score += 1  # length passed
+
+        if not any(c.isupper() for c in password):
             issues.append("Password must contain at least one uppercase letter")
         else:
             score += 1
-        if not any((c.islower() for c in password)):
+
+        if not any(c.islower() for c in password):
             issues.append("Password must contain at least one lowercase letter")
         else:
             score += 1
-        if not any((c.isdigit() for c in password)):
+
+        if not any(c.isdigit() for c in password):
             issues.append("Password must contain at least one number")
         else:
             score += 1
-        if not any((c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)):
+
+        if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
             issues.append("Password must contain at least one special character")
         else:
             score += 1
-        if password.lower() in ["password", "123456", "qwerty", "admin"]:
-            issues.append("Password is too common")
-            score = 0
+
         strength_levels = ["Very Weak", "Weak", "Fair", "Good", "Strong"]
         strength = strength_levels[min(score, 4)]
         return {

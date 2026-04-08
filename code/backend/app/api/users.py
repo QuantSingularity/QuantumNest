@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, List, Optional
 
 from app.db.database import get_db
@@ -33,7 +33,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (
+    expire = datetime.now(timezone.utc) + (
         expires_delta
         if expires_delta
         else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -126,7 +126,7 @@ def update_user(
         update_data["tier"] = update_data["tier"].value
     for key, value in update_data.items():
         setattr(db_user, key, value)
-    db_user.updated_at = datetime.utcnow()
+    db_user.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -170,7 +170,7 @@ def login(
         data={"sub": user.email, "id": user.id, "role": str(user.role)},
         expires_delta=access_token_expires,
     )
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
     return {
         "access_token": access_token,

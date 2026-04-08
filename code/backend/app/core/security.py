@@ -390,3 +390,57 @@ def rate_limit(max_requests: int = 100, window_minutes: int = 1) -> Any:
 
 
 security_manager = SecurityManager()
+
+
+# ---------------------------------------------------------------------------
+# FastAPI dependency helpers – kept here so other modules can import from
+# app.core.security (some legacy test files expect this import path)
+# ---------------------------------------------------------------------------
+from typing import Optional as _Optional
+
+from app.db.database import get_db as _get_db
+from app.models.models import User as _User
+from fastapi import Depends as _Depends
+from fastapi import HTTPException as _HTTPException
+from fastapi import status as _status
+from fastapi.security import OAuth2PasswordBearer as _OAuth2PasswordBearer
+from jose import JWTError as _JWTError
+from jose import jwt as _jwt
+from sqlalchemy.orm import Session as _Session
+
+_oauth2_scheme = _OAuth2PasswordBearer(tokenUrl="token")
+
+
+async def get_current_user(
+    token: str = _Depends(_oauth2_scheme),
+    db: _Session = _Depends(_get_db),
+) -> _User:
+    """Decode JWT and return the corresponding User record."""
+    settings = get_settings()
+    credentials_exception = _HTTPException(
+        status_code=_status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = _jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        username: _Optional[str] = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except _JWTError:
+        raise credentials_exception
+    user = db.query(_User).filter(_User.email == username).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+async def get_current_active_user(
+    current_user: _User = _Depends(get_current_user),
+) -> _User:
+    """Raise 400 if user is inactive."""
+    if not current_user.is_active:
+        raise _HTTPException(status_code=400, detail="Inactive user")
+    return current_user

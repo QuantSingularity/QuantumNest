@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, List, Optional
 
 from app.db.database import get_db
@@ -114,14 +114,16 @@ def get_asset_price(
         "name": db_asset.name,
         "price": current_price,
         "currency": db_asset.currency,
-        "timestamp": latest_price.timestamp if latest_price else datetime.utcnow(),
+        "timestamp": (
+            latest_price.timestamp if latest_price else datetime.now(timezone.utc)
+        ),
     }
 
 
 @router.get("/assets/{asset_id}/price_history")
 def get_asset_price_history(
     asset_id: int,
-    period: str = Query("1m", regex="^(1d|1w|1m|3m|6m|1y)$"),
+    period: str = Query("1m", pattern="^(1d|1w|1m|3m|6m|1y)$"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
@@ -137,7 +139,7 @@ def get_asset_price_history(
         "6m": timedelta(days=180),
         "1y": timedelta(days=365),
     }
-    end_date = datetime.utcnow()
+    end_date = datetime.now(timezone.utc)
     start_date = end_date - period_map.get(period, timedelta(days=30))
 
     price_history = (
@@ -194,7 +196,7 @@ def add_asset_price(
     )
     db.add(db_price)
     db_asset.current_price = price_data.price
-    db_asset.updated_at = datetime.utcnow()
+    db_asset.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(db_price)
     return db_price
@@ -239,7 +241,7 @@ def get_market_summary(
             {"name": "Interest Rate", "value": 2.0, "previous": 1.75},
         ],
         "market_sentiment": {"bullish": 61, "neutral": 23, "bearish": 16},
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -295,7 +297,7 @@ def get_market_news(
 
 @router.get("/sector_performance")
 def get_sector_performance(
-    period: str = Query("ytd", regex="^(1d|1w|1m|3m|6m|1y|ytd)$"),
+    period: str = Query("ytd", pattern="^(1d|1w|1m|3m|6m|1y|ytd)$"),
     current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
     sector_performance = [
@@ -313,7 +315,7 @@ def get_sector_performance(
     return {
         "period": period,
         "data": sector_performance,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 

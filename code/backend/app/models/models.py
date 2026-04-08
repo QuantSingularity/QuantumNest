@@ -16,8 +16,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -178,10 +177,12 @@ class LoginAttempt(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    email = Column(String, nullable=True)
     ip_address = Column(String)
     user_agent = Column(String)
     success = Column(Boolean, default=False)
     failure_reason = Column(String)
+    details = Column(String, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     user = relationship("User", back_populates="login_attempts")

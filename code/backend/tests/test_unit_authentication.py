@@ -33,7 +33,7 @@ class TestAdvancedAuthenticationSystem:
         hashed_password = bcrypt.hashpw(
             password.encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
-        test_user.password_hash = hashed_password
+        test_user.hashed_password = hashed_password
         db_session.commit()
         auth_system._check_rate_limit = Mock(return_value=True)
         auth_system._is_account_locked = Mock(return_value=False)
@@ -89,7 +89,7 @@ class TestAdvancedAuthenticationSystem:
         hashed_password = bcrypt.hashpw(b"correct_password", bcrypt.gensalt()).decode(
             "utf-8"
         )
-        test_user.password_hash = hashed_password
+        test_user.hashed_password = hashed_password
         db_session.commit()
         auth_system._check_rate_limit = Mock(return_value=True)
         auth_system._is_account_locked = Mock(return_value=False)
@@ -153,7 +153,7 @@ class TestAdvancedAuthenticationSystem:
         hashed_password = bcrypt.hashpw(
             password.encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
-        test_user.password_hash = hashed_password
+        test_user.hashed_password = hashed_password
         db_session.commit()
         auth_system._check_rate_limit = Mock(return_value=True)
         auth_system._is_account_locked = Mock(return_value=False)
@@ -534,11 +534,10 @@ class TestRateLimiting:
 class TestSessionManagement:
     """Test session management functionality"""
 
-    @pytest.mark.asyncio
-    async def test_create_session(self, auth_system, test_user):
+    def test_create_session(self, auth_system, test_user):
         """Test session creation"""
         auth_system._get_location_from_ip = Mock(return_value={"country": "US"})
-        session_info = await auth_system._create_session(
+        session_info = auth_system._create_session(
             test_user, "device_123", "127.0.0.1", "test_agent", 0.3
         )
         assert isinstance(session_info, SessionInfo)
@@ -565,18 +564,16 @@ class TestSessionManagement:
 class TestSecurityFeatures:
     """Test security-related features"""
 
-    @pytest.mark.asyncio
-    async def test_calculate_authentication_risk_new_device(
+    def test_calculate_authentication_risk_new_device(
         self, auth_system, db_session, test_user
     ):
         """Test risk calculation for new device"""
-        risk_score = await auth_system._calculate_authentication_risk(
+        risk_score = auth_system._calculate_authentication_risk(
             test_user, "new_device", "127.0.0.1", "test_agent"
         )
         assert risk_score >= 0.3
 
-    @pytest.mark.asyncio
-    async def test_calculate_authentication_risk_known_device(
+    def test_calculate_authentication_risk_known_device(
         self, auth_system, db_session, test_user
     ):
         """Test risk calculation for known device"""
@@ -595,7 +592,7 @@ class TestSecurityFeatures:
             )
             db_session.add(session)
         db_session.commit()
-        risk_score = await auth_system._calculate_authentication_risk(
+        risk_score = auth_system._calculate_authentication_risk(
             test_user, "known_device", "127.0.0.1", "test_agent"
         )
         assert risk_score < 0.3

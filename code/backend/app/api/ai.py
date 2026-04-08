@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.db.database import get_db
@@ -13,7 +13,7 @@ from app.workers.ai_tasks import (
     optimize_portfolio,
     predict_asset_price,
 )
-from celery.result import AsyncResult
+from app.workers.task_queue import MockTaskResult as AsyncResult
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -109,7 +109,7 @@ async def predict_asset_future(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "task_type": "asset_price_prediction",
             "parameters": {
                 "asset_symbol": asset_symbol,
@@ -206,7 +206,7 @@ async def analyze_asset_sentiment(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "task_type": "sentiment_analysis",
             "parameters": {"asset_symbol": asset_symbol, "sources": sources},
         }
@@ -267,7 +267,7 @@ async def optimize_user_portfolio(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "task_type": "portfolio_optimization",
             "parameters": {
                 "portfolio_id": portfolio_id,
@@ -330,7 +330,7 @@ async def analyze_portfolio_risk_async(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "task_type": "portfolio_risk_analysis",
             "parameters": {"portfolio_id": portfolio_id},
         }
@@ -375,7 +375,7 @@ async def get_market_recommendations_async(
             "task_id": task.id,
             "status": "PENDING",
             "user_id": current_user.id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "task_type": "market_recommendations",
             "parameters": {},
         }
@@ -426,7 +426,7 @@ async def get_portfolio_recommendations_legacy(
     # For now, return mock data
     recommendations = {
         "portfolio_id": portfolio_id,
-        "timestamp": datetime.utcnow(),
+        "timestamp": datetime.now(timezone.utc),
         "rebalance_recommendations": [
             {
                 "asset_symbol": "AAPL",
@@ -499,7 +499,7 @@ async def get_market_recommendations_legacy(
     # This would be implemented with actual AI market recommendation logic
     # For now, return mock data
     recommendations = {
-        "timestamp": datetime.utcnow(),
+        "timestamp": datetime.now(timezone.utc),
         "market_outlook": {
             "short_term": "bullish",
             "medium_term": "neutral",
@@ -594,7 +594,7 @@ async def get_asset_sentiment_legacy(
     # For now, return mock data
     sentiment = {
         "asset_symbol": asset_symbol,
-        "timestamp": datetime.utcnow(),
+        "timestamp": datetime.now(timezone.utc),
         "overall_sentiment": {
             "score": 72,  # 0-100, higher is more positive
             "label": "bullish",
@@ -662,7 +662,7 @@ async def get_portfolio_risk_analysis_legacy(
     # For now, return mock data
     risk_analysis = {
         "portfolio_id": portfolio_id,
-        "timestamp": datetime.utcnow(),
+        "timestamp": datetime.now(timezone.utc),
         "overall_risk_score": 65,  # 0-100, higher is riskier
         "risk_metrics": {
             "volatility": 12.5,

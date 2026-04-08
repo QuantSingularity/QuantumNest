@@ -8,11 +8,10 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def task(func: Any) -> Any:
-    return func
+from app.workers.task_queue import celery_app as _celery_app
 
 
-@task
+@_celery_app.task()
 def predict_asset_price(
     asset_symbol: str, days_ahead: int = 5, model_type: str = "lstm"
 ) -> Dict[str, Any]:
@@ -62,9 +61,12 @@ def predict_asset_price(
         return {"error": str(e), "asset_symbol": asset_symbol}
 
 
-@task
+@_celery_app.task()
 def optimize_portfolio(
-    portfolio_id: int, optimization_method: str = "mean_variance"
+    portfolio_id: int,
+    risk_tolerance: Any = None,
+    constraints: Any = None,
+    optimization_method: str = "mean_variance",
 ) -> Dict[str, Any]:
     logger.info(f"Optimizing portfolio {portfolio_id} using {optimization_method}")
     try:
@@ -91,8 +93,8 @@ def optimize_portfolio(
         return {"error": str(e), "portfolio_id": portfolio_id}
 
 
-@task
-def analyze_sentiment(asset_symbol: str) -> Dict[str, Any]:
+@_celery_app.task()
+def analyze_sentiment(asset_symbol: str, sources: Any = None) -> Dict[str, Any]:
     logger.info(f"Analyzing sentiment for {asset_symbol}")
     try:
         return {
@@ -110,7 +112,7 @@ def analyze_sentiment(asset_symbol: str) -> Dict[str, Any]:
         return {"error": str(e), "asset_symbol": asset_symbol}
 
 
-@task
+@_celery_app.task()
 def analyze_portfolio_risk(portfolio_id: int) -> Dict[str, Any]:
     logger.info(f"Analyzing risk for portfolio {portfolio_id}")
     try:
@@ -131,7 +133,7 @@ def analyze_portfolio_risk(portfolio_id: int) -> Dict[str, Any]:
         return {"error": str(e), "portfolio_id": portfolio_id}
 
 
-@task
+@_celery_app.task()
 def generate_market_recommendations() -> Dict[str, Any]:
     logger.info("Generating market recommendations")
     try:

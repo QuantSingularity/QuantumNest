@@ -146,3 +146,33 @@ def admin_headers(client: TestClient, admin_user: User) -> dict:
     assert response.status_code == 200, f"Admin login failed: {response.text}"
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+# ── Authentication system fixtures ───────────────────────────────────────────
+
+
+@pytest.fixture()
+def mock_redis():
+    """Return a MagicMock that mimics a Redis client."""
+    from unittest.mock import MagicMock
+
+    redis_mock = MagicMock()
+    redis_mock.get.return_value = None
+    redis_mock.setex.return_value = True
+    redis_mock.incr.return_value = 1
+    redis_mock.delete.return_value = 1
+    return redis_mock
+
+
+@pytest.fixture()
+def auth_system(db_session, mock_redis):
+    """Return an AdvancedAuthenticationSystem wired to test DB and mock Redis."""
+    from unittest.mock import patch
+
+    from app.auth.authentication import AdvancedAuthenticationSystem
+
+    with patch("app.auth.authentication.redis.Redis", return_value=mock_redis):
+        system = AdvancedAuthenticationSystem(db_session)
+    # Replace the real redis client with the mock so tests can inspect calls
+    system.redis_client = mock_redis
+    return system

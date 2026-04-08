@@ -87,8 +87,7 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 class UserUpdate(BaseModel):
@@ -147,8 +146,7 @@ class Portfolio(PortfolioBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # Asset schemas
@@ -173,8 +171,7 @@ class Asset(AssetBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # Portfolio Asset schemas
@@ -200,8 +197,7 @@ class PortfolioAsset(PortfolioAssetBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # Portfolio with assets
@@ -228,8 +224,7 @@ class AssetPrice(AssetPriceBase):
     id: int
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # Transaction schemas
@@ -256,8 +251,7 @@ class Transaction(TransactionBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # AI Model schemas
@@ -280,8 +274,7 @@ class AIModel(AIModelBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # AI Prediction schemas
@@ -303,8 +296,7 @@ class AIPrediction(AIPredictionBase):
     id: int
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # Smart Contract schemas
@@ -328,8 +320,7 @@ class SmartContract(SmartContractBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # Blockchain Transaction schemas
@@ -354,8 +345,7 @@ class BlockchainTransaction(BlockchainTransactionBase):
     confirmations: int
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # System Log schemas
@@ -375,8 +365,7 @@ class SystemLog(SystemLogBase):
     id: int
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = __import__("pydantic").ConfigDict(from_attributes=True)
 
 
 # User with portfolios (extended schema)

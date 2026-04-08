@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, List
 
 from app.db.database import get_db
@@ -93,7 +93,7 @@ def update_portfolio(
         db_portfolio.risk_level = portfolio.risk_level.value
     if portfolio.investment_strategy:
         db_portfolio.investment_strategy = portfolio.investment_strategy
-    db_portfolio.updated_at = datetime.utcnow()
+    db_portfolio.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(db_portfolio)
     return db_portfolio
@@ -116,7 +116,7 @@ def delete_portfolio(
     if db_portfolio is None:
         raise HTTPException(status_code=404, detail="Portfolio not found")
     db_portfolio.is_active = False
-    db_portfolio.updated_at = datetime.utcnow()
+    db_portfolio.updated_at = datetime.now(timezone.utc)
     db.commit()
 
 
@@ -166,7 +166,7 @@ def add_asset_to_portfolio(
         asset_id=portfolio_asset.asset_id,
         quantity=portfolio_asset.quantity,
         purchase_price=portfolio_asset.purchase_price,
-        purchase_date=portfolio_asset.purchase_date or datetime.utcnow(),
+        purchase_date=portfolio_asset.purchase_date or datetime.now(timezone.utc),
         cost_basis=cost_basis,
         target_weight=portfolio_asset.target_weight,
     )
@@ -221,7 +221,7 @@ def update_portfolio_asset(
     db_portfolio_asset.cost_basis = (
         portfolio_asset.quantity * portfolio_asset.purchase_price
     )
-    db_portfolio_asset.updated_at = datetime.utcnow()
+    db_portfolio_asset.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(db_portfolio_asset)
     return db_portfolio_asset
@@ -251,7 +251,7 @@ def delete_portfolio_asset(
 @router.get("/performance/{portfolio_id}")
 def get_portfolio_performance(
     portfolio_id: int,
-    period: str = Query("1m", regex="^(1d|1w|1m|3m|6m|1y|ytd|all)$"),
+    period: str = Query("1m", pattern="^(1d|1w|1m|3m|6m|1y|ytd|all)$"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
@@ -291,7 +291,7 @@ def get_portfolio_performance(
         "max_drawdown": -5.2,
         "total_assets": len(assets),
         "data_points": [],
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
