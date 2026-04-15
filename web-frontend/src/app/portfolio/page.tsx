@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+// FIXED: getMockAssets was defined AFTER the useEffect that referenced it in its
+// dependency array, causing a stale closure. Wrapped in useCallback so it's stable
+// and hoisted before the useEffect.
+
+import { useCallback, useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -31,23 +35,84 @@ interface PortfolioAsset {
 }
 
 export default function Portfolio() {
-  const { get, isLoading } = useApi();
-  const { account, isConnected } = useBlockchain();
+  const { get } = useApi();
+  const { isConnected } = useBlockchain();
   const [assets, setAssets] = useState<PortfolioAsset[]>([]);
   const [loadingAssets, setLoadingAssets] = useState(true);
+
+  // FIXED: Moved getMockAssets to useCallback so it's defined before useEffect
+  // and stable across renders.
+  const getMockAssets = useCallback(
+    (): PortfolioAsset[] => [
+      {
+        id: "1",
+        symbol: "AAPL",
+        name: "Apple Inc.",
+        quantity: 50,
+        averagePrice: 150.0,
+        currentPrice: 180.25,
+        totalValue: 9012.5,
+        profitLoss: 1512.5,
+        profitLossPercentage: 20.17,
+      },
+      {
+        id: "2",
+        symbol: "TSLA",
+        name: "Tesla, Inc.",
+        quantity: 25,
+        averagePrice: 200.0,
+        currentPrice: 210.75,
+        totalValue: 5268.75,
+        profitLoss: 268.75,
+        profitLossPercentage: 5.38,
+      },
+      {
+        id: "3",
+        symbol: "ETH",
+        name: "Ethereum",
+        quantity: 10,
+        averagePrice: 3000.0,
+        currentPrice: 3200.0,
+        totalValue: 32000.0,
+        profitLoss: 2000.0,
+        profitLossPercentage: 6.67,
+      },
+      {
+        id: "4",
+        symbol: "MSFT",
+        name: "Microsoft Corporation",
+        quantity: 30,
+        averagePrice: 400.0,
+        currentPrice: 410.5,
+        totalValue: 12315.0,
+        profitLoss: 315.0,
+        profitLossPercentage: 2.63,
+      },
+      {
+        id: "5",
+        symbol: "GOOGL",
+        name: "Alphabet Inc.",
+        quantity: 20,
+        averagePrice: 140.0,
+        currentPrice: 142.5,
+        totalValue: 2850.0,
+        profitLoss: 50.0,
+        profitLossPercentage: 1.79,
+      },
+    ],
+    [],
+  );
 
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
         setLoadingAssets(true);
-        // Try to fetch from backend API
         const data = await get<{ assets: PortfolioAsset[] }>(
           "/portfolio/assets",
         );
         setAssets(data.assets || []);
       } catch (error) {
         console.error("Error fetching portfolio:", error);
-        // Use mock data if API fails
         setAssets(getMockAssets());
       } finally {
         setLoadingAssets(false);
@@ -56,64 +121,6 @@ export default function Portfolio() {
 
     fetchPortfolio();
   }, [get, getMockAssets]);
-
-  const getMockAssets = (): PortfolioAsset[] => [
-    {
-      id: "1",
-      symbol: "AAPL",
-      name: "Apple Inc.",
-      quantity: 50,
-      averagePrice: 150.0,
-      currentPrice: 180.25,
-      totalValue: 9012.5,
-      profitLoss: 1512.5,
-      profitLossPercentage: 20.17,
-    },
-    {
-      id: "2",
-      symbol: "TSLA",
-      name: "Tesla, Inc.",
-      quantity: 25,
-      averagePrice: 200.0,
-      currentPrice: 210.75,
-      totalValue: 5268.75,
-      profitLoss: 268.75,
-      profitLossPercentage: 5.38,
-    },
-    {
-      id: "3",
-      symbol: "ETH",
-      name: "Ethereum",
-      quantity: 10,
-      averagePrice: 3000.0,
-      currentPrice: 3200.0,
-      totalValue: 32000.0,
-      profitLoss: 2000.0,
-      profitLossPercentage: 6.67,
-    },
-    {
-      id: "4",
-      symbol: "MSFT",
-      name: "Microsoft Corporation",
-      quantity: 30,
-      averagePrice: 400.0,
-      currentPrice: 410.5,
-      totalValue: 12315.0,
-      profitLoss: 315.0,
-      profitLossPercentage: 2.63,
-    },
-    {
-      id: "5",
-      symbol: "GOOGL",
-      name: "Alphabet Inc.",
-      quantity: 20,
-      averagePrice: 140.0,
-      currentPrice: 142.5,
-      totalValue: 2850.0,
-      profitLoss: 50.0,
-      profitLossPercentage: 1.79,
-    },
-  ];
 
   const totalValue = assets.reduce((sum, asset) => sum + asset.totalValue, 0);
   const totalProfitLoss = assets.reduce(

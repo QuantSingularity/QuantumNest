@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+// FIXED: Added RefObject import from React to fix "React is not defined" type error
+// in useOnClickOutside's parameter type annotation.
+
+import { type RefObject, useEffect, useState } from "react";
 
 export function useLocalStorage<T>(
   key: string,
   initialValue: T,
 ): [T, (value: T) => void] {
-  // Get from local storage then parse stored json or return initialValue
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === "undefined") {
       return initialValue;
     }
-
     try {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
@@ -21,17 +22,11 @@ export function useLocalStorage<T>(
     }
   });
 
-  // Return a wrapped version of useState's setter function that persists the new value to localStorage
   const setValue = (value: T) => {
     try {
-      // Allow value to be a function so we have the same API as useState
       const valueToStore =
         value instanceof Function ? value(storedValue) : value;
-
-      // Save to state
       setStoredValue(valueToStore);
-
-      // Save to local storage
       if (typeof window !== "undefined") {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
@@ -79,8 +74,10 @@ export function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+// FIXED: Changed React.RefObject<HTMLElement> to RefObject<HTMLElement>
+// since we now import RefObject directly instead of using the React namespace.
 export function useOnClickOutside(
-  ref: React.RefObject<HTMLElement>,
+  ref: RefObject<HTMLElement>,
   handler: (event: MouseEvent | TouchEvent) => void,
 ) {
   useEffect(() => {

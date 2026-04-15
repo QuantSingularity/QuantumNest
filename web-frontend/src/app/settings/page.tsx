@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { getSettings, updateSettings, validateSettings } from "@/lib/settings";
+import Navbar from "@/components/layout/Navbar";
 
 interface SettingsState {
   theme: string;
@@ -205,272 +206,289 @@ export default function Settings() {
 
   if (settings.loading) {
     return (
-      <div className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Settings</h1>
-        <div className="flex justify-center items-center h-64">
-          <p className="text-lg">Loading settings...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Navbar />
+        <div className="container mx-auto p-6">
+          <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+            Settings
+          </h1>
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mr-3"></div>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Loading settings...
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar />
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+          Settings
+        </h1>
 
-      {settings.error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {settings.error}
-        </div>
-      )}
-
-      {settings.success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {settings.success}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Appearance</h2>
-
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2" htmlFor="theme">
-              Theme
-            </label>
-            <select
-              id="theme"
-              className="w-full p-2 border rounded"
-              value={settings.theme}
-              onChange={handleThemeChange}
-              aria-label="theme"
-            >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="system">System</option>
-            </select>
+        {settings.error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {settings.error}
           </div>
+        )}
 
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-2"
-              htmlFor="language"
-            >
-              Language
-            </label>
-            <select
-              id="language"
-              className="w-full p-2 border rounded"
-              value={settings.language}
-              onChange={handleLanguageChange}
-              aria-label="language"
-            >
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="zh">Chinese</option>
-              <option value="ja">Japanese</option>
-            </select>
+        {settings.success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {settings.success}
           </div>
-        </Card>
+        )}
 
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Notifications</h2>
-
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={settings.notifications.email}
-                onChange={() => handleNotificationToggle("email")}
-                aria-label="email"
-              />
-              <span>Email Notifications</span>
-            </label>
-          </div>
-
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={settings.notifications.push}
-                onChange={() => handleNotificationToggle("push")}
-                aria-label="push"
-              />
-              <span>Push Notifications</span>
-            </label>
-          </div>
-
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={settings.notifications.sms}
-                onChange={() => handleNotificationToggle("sms")}
-                aria-label="sms"
-              />
-              <span>SMS Notifications</span>
-            </label>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Security</h2>
-
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={settings.security.twoFactor}
-                onChange={() => handleSecurityToggle("twoFactor")}
-                aria-label="two-factor"
-              />
-              <span>Two-Factor Authentication</span>
-            </label>
-          </div>
-
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={settings.security.biometrics}
-                onChange={() => handleSecurityToggle("biometrics")}
-                aria-label="biometrics"
-              />
-              <span>Biometric Authentication</span>
-            </label>
-          </div>
-
-          <div className="mt-6">
-            <Button
-              onClick={() => setShowPasswordModal(true)}
-              aria-label="change password"
-            >
-              Change Password
-            </Button>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Privacy</h2>
-
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={settings.privacy.dataSharing}
-                onChange={() => handlePrivacyToggle("dataSharing")}
-                aria-label="data-sharing"
-              />
-              <span>Data Sharing</span>
-            </label>
-            <p className="text-sm text-gray-500 mt-1">
-              Allow sharing anonymized data to improve our services
-            </p>
-          </div>
-
-          <div className="mb-4">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={settings.privacy.analytics}
-                onChange={() => handlePrivacyToggle("analytics")}
-                aria-label="analytics"
-              />
-              <span>Usage Analytics</span>
-            </label>
-            <p className="text-sm text-gray-500 mt-1">
-              Allow collection of usage data to improve your experience
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div className="mt-8 flex justify-end space-x-4">
-        <Button variant="secondary" onClick={handleCancel} aria-label="cancel">
-          Cancel
-        </Button>
-        <Button onClick={handleSave} aria-label="save">
-          Save Settings
-        </Button>
-      </div>
-
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Appearance</h2>
 
             <div className="mb-4">
-              <label
-                className="block text-sm font-medium mb-2"
-                htmlFor="currentPassword"
-              >
-                Current Password
+              <label className="block text-sm font-medium mb-2" htmlFor="theme">
+                Theme
               </label>
-              <input
-                type="password"
-                id="currentPassword"
-                name="currentPassword"
+              <select
+                id="theme"
                 className="w-full p-2 border rounded"
-                value={passwordData.currentPassword}
-                onChange={handlePasswordChange}
-              />
+                value={settings.theme}
+                onChange={handleThemeChange}
+                aria-label="theme"
+              >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="system">System</option>
+              </select>
             </div>
 
             <div className="mb-4">
               <label
                 className="block text-sm font-medium mb-2"
-                htmlFor="newPassword"
+                htmlFor="language"
               >
-                New Password
+                Language
               </label>
-              <input
-                type="password"
-                id="newPassword"
-                name="newPassword"
+              <select
+                id="language"
                 className="w-full p-2 border rounded"
-                value={passwordData.newPassword}
-                onChange={handlePasswordChange}
-              />
+                value={settings.language}
+                onChange={handleLanguageChange}
+                aria-label="language"
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+              </select>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Notifications</h2>
+
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={settings.notifications.email}
+                  onChange={() => handleNotificationToggle("email")}
+                  aria-label="email"
+                />
+                <span>Email Notifications</span>
+              </label>
             </div>
 
-            <div className="mb-6">
-              <label
-                className="block text-sm font-medium mb-2"
-                htmlFor="confirmPassword"
-              >
-                Confirm New Password
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={settings.notifications.push}
+                  onChange={() => handleNotificationToggle("push")}
+                  aria-label="push"
+                />
+                <span>Push Notifications</span>
               </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                className="w-full p-2 border rounded"
-                value={passwordData.confirmPassword}
-                onChange={handlePasswordChange}
-              />
             </div>
 
-            <div className="flex justify-end space-x-4">
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={settings.notifications.sms}
+                  onChange={() => handleNotificationToggle("sms")}
+                  aria-label="sms"
+                />
+                <span>SMS Notifications</span>
+              </label>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Security</h2>
+
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={settings.security.twoFactor}
+                  onChange={() => handleSecurityToggle("twoFactor")}
+                  aria-label="two-factor"
+                />
+                <span>Two-Factor Authentication</span>
+              </label>
+            </div>
+
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={settings.security.biometrics}
+                  onChange={() => handleSecurityToggle("biometrics")}
+                  aria-label="biometrics"
+                />
+                <span>Biometric Authentication</span>
+              </label>
+            </div>
+
+            <div className="mt-6">
               <Button
-                variant="secondary"
-                onClick={() => setShowPasswordModal(false)}
+                onClick={() => setShowPasswordModal(true)}
+                aria-label="change password"
               >
-                Cancel
+                Change Password
               </Button>
-              <Button onClick={handlePasswordSubmit}>Update Password</Button>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Privacy</h2>
+
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={settings.privacy.dataSharing}
+                  onChange={() => handlePrivacyToggle("dataSharing")}
+                  aria-label="data-sharing"
+                />
+                <span>Data Sharing</span>
+              </label>
+              <p className="text-sm text-gray-500 mt-1">
+                Allow sharing anonymized data to improve our services
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={settings.privacy.analytics}
+                  onChange={() => handlePrivacyToggle("analytics")}
+                  aria-label="analytics"
+                />
+                <span>Usage Analytics</span>
+              </label>
+              <p className="text-sm text-gray-500 mt-1">
+                Allow collection of usage data to improve your experience
+              </p>
+            </div>
+          </Card>
+        </div>
+
+        <div className="mt-8 flex justify-end space-x-4">
+          <Button
+            variant="secondary"
+            onClick={handleCancel}
+            aria-label="cancel"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSave} aria-label="save">
+            Save Settings
+          </Button>
+        </div>
+
+        {showPasswordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+
+              <div className="mb-4">
+                <label
+                  className="block text-sm font-medium mb-2"
+                  htmlFor="currentPassword"
+                >
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  id="currentPassword"
+                  name="currentPassword"
+                  className="w-full p-2 border rounded"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label
+                  className="block text-sm font-medium mb-2"
+                  htmlFor="newPassword"
+                >
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  name="newPassword"
+                  className="w-full p-2 border rounded"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                />
+              </div>
+
+              <div className="mb-6">
+                <label
+                  className="block text-sm font-medium mb-2"
+                  htmlFor="confirmPassword"
+                >
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  className="w-full p-2 border rounded"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowPasswordModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handlePasswordSubmit}>Update Password</Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
