@@ -184,14 +184,14 @@ npm run type-check
 ```solidity
 // Good
 contract TokenizedAsset is ERC20, Ownable {
-    /// @notice Update asset valuation
-    /// @param newValue New asset value in cents
-    function updateAssetValue(uint256 newValue) external onlyOwner {
-        uint256 oldValue = assetValue;
-        assetValue = newValue;
+  /// @notice Update asset valuation
+  /// @param newValue New asset value in cents
+  function updateAssetValue(uint256 newValue) external onlyOwner {
+    uint256 oldValue = assetValue;
+    assetValue = newValue;
 
-        emit AssetRevalued(oldValue, newValue, block.timestamp);
-    }
+    emit AssetRevalued(oldValue, newValue, block.timestamp);
+  }
 }
 ```
 
