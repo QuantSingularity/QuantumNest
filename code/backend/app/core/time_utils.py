@@ -2,7 +2,7 @@
 
 ``datetime.utcnow()`` is deprecated as of Python 3.12 and scheduled for
 removal in a future release, because it returns a *naive* datetime (no
-``tzinfo``) that silently represents UTC — a common source of bugs when it's
+``tzinfo``) that silently represents UTC - a common source of bugs when it's
 mixed with timezone-aware values. The rest of this codebase (existing
 ``DateTime`` columns, comparisons, JWT ``exp``/``iat`` claims, etc.) was
 written assuming ``utcnow()``'s naive-UTC behavior throughout, so switching

@@ -1,7 +1,7 @@
-"""Legacy Flask reimplementation of the API — NOT the live application.
+"""Legacy Flask reimplementation of the API - NOT the live application.
 
 The actual backend served in development and production is the FastAPI app
-in ``app/main.py`` (started via ``run_flask.py``, which — despite its name —
+in ``app/main.py`` (started via ``run_flask.py``, which - despite its name -
 launches ``app.main:app`` through uvicorn, not this module). This file isn't
 imported by any entry point in the project. It's kept for reference but
 receives no traffic; don't assume changes here affect the running API.

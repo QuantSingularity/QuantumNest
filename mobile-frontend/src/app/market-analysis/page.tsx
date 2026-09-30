@@ -249,7 +249,7 @@ function AssetDetailSheet({
                 <p className="mt-1 font-display text-lg font-semibold">
                   {asset.current_price != null
                     ? formatCurrency(asset.current_price)
-                    : "—"}
+                    : "-"}
                 </p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
@@ -261,13 +261,13 @@ function AssetDetailSheet({
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Exchange</p>
                 <p className="mt-1 text-sm font-medium">
-                  {asset.exchange || "—"}
+                  {asset.exchange || "-"}
                 </p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Sector</p>
                 <p className="mt-1 text-sm font-medium">
-                  {asset.sector || "—"}
+                  {asset.sector || "-"}
                 </p>
               </div>
             </div>
@@ -405,12 +405,12 @@ function AssetsTab() {
                         {asset.asset_type}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {asset.sector || "—"}
+                        {asset.sector || "-"}
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {asset.current_price != null
                           ? formatCurrency(asset.current_price)
-                          : "—"}
+                          : "-"}
                       </TableCell>
                     </TableRow>
                   ))}

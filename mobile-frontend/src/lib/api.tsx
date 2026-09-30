@@ -62,7 +62,7 @@ function buildQuery(params?: QueryParams): string {
 export function ApiProvider({ children }: { children: ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null);
   // Mirrors `token`, but updates synchronously (unlike React state) so that
-  // a request fired immediately after setToken() — before the next render —
+  // a request fired immediately after setToken() - before the next render -
   // still picks up the new value instead of a stale, closed-over one.
   const tokenRef = useRef<string | null>(null);
   const [hydrated, setHydrated] = useState(false);

@@ -1,14 +1,14 @@
-"""Role-based access control (RBAC) — not wired into the live application.
+"""Role-based access control (RBAC) - not wired into the live application.
 
 This module is only imported by ``app/main_flask.py``, which is itself dead
 code (see that file's docstring). The live FastAPI app (``app/main.py`` and
 ``app/api/*.py``) uses a simpler flat role check instead
-(``User.role`` — a plain ``UserRole`` string column, checked directly by
+(``User.role`` - a plain ``UserRole`` string column, checked directly by
 each endpoint's dependency).
 
 This module was scaffolded for a fuller RBAC system but the database schema
 it depends on was never built: it imports ``Permission``, ``Role``, and
-``RolePermission`` ORM models, plus a ``UserRole`` *join-table* model — none
+``RolePermission`` ORM models, plus a ``UserRole`` *join-table* model - none
 of which exist in ``app/models/models.py``. The only ``UserRole`` that
 exists there is the simple string enum used by the flat-role check above,
 not an ORM-mapped table, so the queries in this file

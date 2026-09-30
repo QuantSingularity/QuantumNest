@@ -1,6 +1,6 @@
 # QuantumNest Mobile Frontend
 
-The mobile-optimized Progressive Web App (PWA) for QuantumNest Capital — an AI-driven
+The mobile-optimized Progressive Web App (PWA) for QuantumNest Capital - an AI-driven
 investment platform with tokenized-asset support. Built with Next.js 15 (App Router)
 and sharing the same design system and backend integration as `web-frontend`, with a
 mobile-first layout (bottom tab navigation, single-column pages).
@@ -76,7 +76,7 @@ Blockchain Explorer, Profile, Settings, and (for admins) the Admin console.
 
 ## Backend integration
 
-This app talks directly to the FastAPI backend in `code/backend` — no separate mobile
+This app talks directly to the FastAPI backend in `code/backend` - no separate mobile
 API. Key endpoints used: `POST /token`, `POST /users/`, `GET /users/me`,
 `GET|POST|PUT|DELETE /portfolio/...`, `GET /market/...`, `GET /ai/...`,
 `GET /blockchain/...`, and `GET|PUT /admin/...` (admin role required). See
@@ -91,5 +91,5 @@ npm run build:worker
 npm run preview     # local Workers runtime preview
 ```
 
-Cloudflare-specific bindings live in `wrangler.toml`. This path is optional — the app
+Cloudflare-specific bindings live in `wrangler.toml`. This path is optional - the app
 runs anywhere Next.js runs (Node.js server, Vercel, Docker, etc.) via `npm start`.

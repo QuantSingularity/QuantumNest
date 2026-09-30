@@ -69,7 +69,7 @@ class DatabaseManager:
                 autocommit=False, autoflush=False, bind=self.engine
             )
             logger.info(
-                "DatabaseManager initialised — %s",
+                "DatabaseManager initialised - %s",
                 "sqlite" if self._is_sqlite else self.database_url.split("@")[-1],
             )
         except Exception as exc:
@@ -129,7 +129,7 @@ class DatabaseManager:
     # ── Session helpers ───────────────────────────────────────────────────────
 
     def get_session(self) -> Generator[Session, None, None]:
-        """FastAPI dependency — yields a DB session and ensures cleanup."""
+        """FastAPI dependency - yields a DB session and ensures cleanup."""
         if self.SessionLocal is None:
             raise RuntimeError(
                 "DatabaseManager not initialised. Call initialize() first."

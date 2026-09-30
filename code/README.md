@@ -119,7 +119,7 @@ code/
 | ------------- | -------------------------------------- |
 | `GET /`       | Welcome + version                      |
 | `GET /health` | Health check                           |
-| `POST /token` | OAuth2 password flow — get JWT         |
+| `POST /token` | OAuth2 password flow - get JWT         |
 | `/users`      | User registration, profile, management |
 | `/portfolio`  | Portfolio CRUD, assets, performance    |
 | `/market`     | Assets, prices, market data, news      |
@@ -159,7 +159,7 @@ See `backend/.env.example` for the full list. Key variables:
 - Never commit `.env` files to version control
 - In production, set `ENVIRONMENT=production` and provide an explicit `SECRET_KEY`
 - The `ALLOWED_ORIGINS=*` default is **only** acceptable in local development
-- The blockchain `PRIVATE_KEY` in `.env.example` is the well-known Hardhat test account — never use it on mainnet
+- The blockchain `PRIVATE_KEY` in `.env.example` is the well-known Hardhat test account - never use it on mainnet
 
 ---
 

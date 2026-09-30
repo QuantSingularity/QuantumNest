@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
-  QUANTUMNEST DESIGN SYSTEM — "Quant Terminal"
+  QUANTUMNEST DESIGN SYSTEM - "Quant Terminal"
   ─────────────────────────────────────────────
   Signature idea: this is a quantitative trading platform, so the accent
   language borrows from the amber/green phosphor displays of vintage
@@ -11,21 +11,21 @@
   "AI SaaS" palette. Amber (--primary) carries brand and calls-to-action;
   a cooler cyan (--accent) marks AI/intelligence surfaces, giving the two
   accents distinct jobs instead of decorating arbitrarily. Gain/loss stay
-  a conventional, legible emerald/rose — finance UI is the wrong place to
+  a conventional, legible emerald/rose - finance UI is the wrong place to
   get clever with red/green.
 
   Named palette (dark, the app's default theme):
-    Ink       #06070C  — background
-    Signal    #F2A93C  — primary / amber phosphor
-    Current   #22B8CC  — accent / cyan signal
-    Gain      #34C48C  — success
-    Loss      #F2536B  — destructive
+    Ink       #06070C  - background
+    Signal    #F2A93C  - primary / amber phosphor
+    Current   #22B8CC  - accent / cyan signal
+    Gain      #34C48C  - success
+    Loss      #F2536B  - destructive
 */
 
 @layer base {
   :root {
     /* Self-hosted via @fontsource-variable (no external font requests at
-       runtime or build time — see layout.tsx for the imports). */
+       runtime or build time - see layout.tsx for the imports). */
     --font-sans:
       "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
       Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -215,7 +215,7 @@
   }
 
   /* Financial figures (prices, percentages, balances) use the monospace
-     data face with tabular numerals — columns of numbers align, and the
+     data face with tabular numerals - columns of numbers align, and the
      precision-instrument feel is deliberate for a quant platform. */
   .font-data {
     @apply font-mono tabular-nums;

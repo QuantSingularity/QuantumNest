@@ -37,7 +37,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       {/* suppressHydrationWarning here guards against browser extensions
           (ad blockers, converters, password managers, etc.) injecting
-          attributes into <body> before React hydrates — that's an
+          attributes into <body> before React hydrates - that's an
           extension-caused mismatch, not an app bug, and is safe to ignore. */}
       <body
         className="min-h-screen bg-background font-sans antialiased"

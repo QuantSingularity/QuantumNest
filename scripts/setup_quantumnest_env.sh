@@ -70,7 +70,7 @@ install_dependencies() {
 
 # Copy a component's own .env.example to its local env file, if one doesn't
 # already exist. Each component (backend, blockchain, web-frontend,
-# mobile-frontend) ships its own .env.example — there is no single
+# mobile-frontend) ships its own .env.example - there is no single
 # project-root env.example to fan out from.
 setup_env_file() {
   local name="$1"

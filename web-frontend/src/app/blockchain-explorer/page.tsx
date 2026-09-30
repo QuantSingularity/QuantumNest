@@ -173,7 +173,7 @@ function WalletCard({
               Balances on {balance.network}
             </p>
             <p className="text-xs text-muted-foreground">
-              Raw on-chain balances — no price feed is connected, so no USD
+              Raw on-chain balances - no price feed is connected, so no USD
               total is shown.
             </p>
             <div className="mt-3 space-y-2">

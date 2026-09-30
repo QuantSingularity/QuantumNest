@@ -4,7 +4,7 @@
 # This script is designed to be run from the project root (QuantumNest/).
 #
 # Linters routinely exit non-zero simply because they found something to
-# report (that's normal, expected behavior, not a script error) — so this
+# report (that's normal, expected behavior, not a script error) - so this
 # script does NOT use `set -e` around tool invocations. Every tool runs
 # through to completion; a summary of what passed/failed is printed at the
 # end, and the script's own exit code reflects whether any checker reported
