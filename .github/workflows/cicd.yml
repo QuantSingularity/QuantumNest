@@ -272,10 +272,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: mobile-frontend/package-lock.json
 
@@ -292,6 +292,6 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-web-dist
-          path: mobile-frontend/dist/
+          name: mobile-web-build
+          path: mobile-frontend/.next/
           retention-days: 7
