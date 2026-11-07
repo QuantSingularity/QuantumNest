@@ -1,32 +1,32 @@
-variable "app_name"         {}
-variable "environment"      {}
-variable "vpc_id"           {}
-variable "cluster_name"     {}
-variable "cluster_version"  { default = "1.29" }
-variable "subnet_ids"       { type = list(string) }
+variable "app_name" {}
+variable "environment" {}
+variable "vpc_id" {}
+variable "cluster_name" {}
+variable "cluster_version" { default = "1.29" }
+variable "subnet_ids" { type = list(string) }
 variable "security_group_ids" { type = list(string) }
-variable "instance_type"    { default = "t3.micro" }
-variable "key_name"         { default = null }
+variable "instance_type" { default = "t3.micro" }
+variable "key_name" { default = null }
 variable "private_subnet_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
-variable "kms_key_arn"      { default = "" }
-variable "cluster_endpoint_public_access"       { default = true }
+variable "kms_key_arn" { default = "" }
+variable "cluster_endpoint_public_access" { default = true }
 variable "cluster_endpoint_public_access_cidrs" {
-  type = list(string)
+  type    = list(string)
   default = ["0.0.0.0/0"]
 }
 variable "cluster_enabled_log_types" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 variable "node_groups" {
-  type = any
+  type    = any
   default = {}
 }
-variable "tags"             {
-  type = map(string)
+variable "tags" {
+  type    = map(string)
   default = {}
 }
 
@@ -302,9 +302,9 @@ resource "aws_lb_listener" "http_redirect" {
   }
 }
 
-output "cluster_endpoint"                    { value = aws_eks_cluster.main.endpoint }
-output "cluster_name"                        { value = aws_eks_cluster.main.name }
-output "cluster_certificate_authority_data"  { value = aws_eks_cluster.main.certificate_authority[0].data }
-output "instance_ids"                        { value = [] }
-output "instance_public_ips"                 { value = [] }
-output "load_balancer_dns"                   { value = aws_lb.app.dns_name }
+output "cluster_endpoint" { value = aws_eks_cluster.main.endpoint }
+output "cluster_name" { value = aws_eks_cluster.main.name }
+output "cluster_certificate_authority_data" { value = aws_eks_cluster.main.certificate_authority[0].data }
+output "instance_ids" { value = [] }
+output "instance_public_ips" { value = [] }
+output "load_balancer_dns" { value = aws_lb.app.dns_name }

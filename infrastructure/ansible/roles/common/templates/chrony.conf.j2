@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+{% for server in ntp_servers | default(['0.pool.ntp.org', '1.pool.ntp.org', '2.pool.ntp.org', '3.pool.ntp.org']) %}
+server {{ server }} iburst
+{% endfor %}
+
+driftfile /var/lib/chrony/chrony.drift
+logdir /var/log/chrony
+
+# Step the clock if it is off by more than a second during the first 3 updates.
+makestep 1.0 3
+rtcsync
+maxupdateskew 100.0

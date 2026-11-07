@@ -39,15 +39,15 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Environment         = var.environment
-      Project             = "QuantumNest"
-      Owner               = "Platform-Team"
-      CostCenter          = "Technology"
-      DataClassification  = "Confidential"
-      Compliance          = "PCI-DSS,SOX,GDPR,FINRA"
-      BackupRequired      = "true"
-      MonitoringEnabled   = "true"
-      ManagedBy           = "Terraform"
+      Environment        = var.environment
+      Project            = "QuantumNest"
+      Owner              = "Platform-Team"
+      CostCenter         = "Technology"
+      DataClassification = "Confidential"
+      Compliance         = "PCI-DSS,SOX,GDPR,FINRA"
+      BackupRequired     = "true"
+      MonitoringEnabled  = "true"
+      ManagedBy          = "Terraform"
     }
   }
 
@@ -95,21 +95,23 @@ locals {
   name_prefix = "${var.app_name}-${var.environment}"
 
   common_tags = {
-    Environment         = var.environment
-    Project             = "QuantumNest"
-    Owner               = "Platform-Team"
-    CostCenter          = "Technology"
-    DataClassification  = "Confidential"
-    Compliance          = "PCI-DSS,SOX,GDPR,FINRA"
-    BackupRequired      = "true"
-    MonitoringEnabled   = "true"
-    ManagedBy           = "Terraform"
+    Environment        = var.environment
+    Project            = "QuantumNest"
+    Owner              = "Platform-Team"
+    CostCenter         = "Technology"
+    DataClassification = "Confidential"
+    Compliance         = "PCI-DSS,SOX,GDPR,FINRA"
+    BackupRequired     = "true"
+    MonitoringEnabled  = "true"
+    ManagedBy          = "Terraform"
   }
 
   azs = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  vpc_cidr = var.environment == "prod" ? "10.0.0.0/16" :
+  vpc_cidr = (
+    var.environment == "prod" ? "10.0.0.0/16" :
     var.environment == "staging" ? "10.1.0.0/16" : "10.2.0.0/16"
+  )
 
   private_subnets = [
     cidrsubnet(local.vpc_cidr, 8, 1),
@@ -329,11 +331,11 @@ module "eks" {
 module "database" {
   source = "./modules/database"
 
-  db_name          = var.db_name
-  environment      = var.environment
+  db_name           = var.db_name
+  environment       = var.environment
   db_instance_class = var.environment == "prod" ? "db.r5.2xlarge" : "db.r5.large"
-  db_username      = var.db_username
-  db_password      = var.db_password
+  db_username       = var.db_username
+  db_password       = var.db_password
 
   private_subnet_ids = module.vpc.private_subnet_ids
   security_group_ids = [module.security_groups.database_security_group_id]
@@ -536,7 +538,7 @@ resource "aws_s3_bucket_policy" "audit_logs" {
         Resource = "${aws_s3_bucket.audit_logs.arn}/cloudtrail-logs/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
         Condition = {
           StringEquals = {
-            "s3:x-amz-acl"     = "bucket-owner-full-control"
+            "s3:x-amz-acl"      = "bucket-owner-full-control"
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
         }
@@ -547,7 +549,7 @@ resource "aws_s3_bucket_policy" "audit_logs" {
         Principal = {
           AWS = "*"
         }
-        Action   = "s3:*"
+        Action = "s3:*"
         Resource = [
           aws_s3_bucket.audit_logs.arn,
           "${aws_s3_bucket.audit_logs.arn}/*"

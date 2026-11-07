@@ -24,7 +24,7 @@
 lsof -i :8000  # or :3000
 
 # Kill process
-kill -9 <PID>
+kill -9 PID
 
 # Or use different port
 PORT=8001 uvicorn app.main:app --reload

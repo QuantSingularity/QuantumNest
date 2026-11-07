@@ -273,7 +273,7 @@ curl http://localhost:8000/health
 
 Open browser and navigate to:
 
-```
+```text
 http://localhost:3000
 ```
 
@@ -281,7 +281,7 @@ You should see the QuantumNest landing page.
 
 ### 3. Check API Documentation
 
-```
+```text
 http://localhost:8000/docs
 ```
 
@@ -331,6 +331,7 @@ After successful installation:
    - See [Usage Guide](USAGE.md) for common workflows
 
 5. **Deploy Smart Contracts** (for development):
+
    ```bash
    cd code/blockchain
    npx hardhat run scripts/deploy.js --network goerli
@@ -340,17 +341,17 @@ After successful installation:
 
 ### Common Issues
 
-**Port Already in Use**
+#### Port Already in Use
 
 ```bash
 # Find process using port
 lsof -i :8000  # or :3000
 
 # Kill process
-kill -9 <PID>
+kill -9 PID
 ```
 
-**Python Virtual Environment Not Found**
+#### Python Virtual Environment Not Found
 
 ```bash
 # Ensure you're in the correct directory
@@ -362,7 +363,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Node Module Installation Fails**
+#### Node Module Installation Fails
 
 ```bash
 # Clear npm cache
@@ -375,7 +376,7 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-**Database Connection Error**
+#### Database Connection Error
 
 ```bash
 # Check PostgreSQL is running

@@ -1,16 +1,16 @@
-variable "name"        {}
+variable "name" {}
 variable "environment" {}
-variable "vpc_id"      {}
+variable "vpc_id" {}
 variable "private_subnets_cidr" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
-variable "public_subnets_cidr"  {
-  type = list(string)
+variable "public_subnets_cidr" {
+  type    = list(string)
   default = []
 }
-variable "tags"        {
-  type = map(string)
+variable "tags" {
+  type    = map(string)
   default = {}
 }
 
@@ -73,11 +73,11 @@ resource "aws_security_group" "app" {
   }
 
   ingress {
-    from_port       = 9090
-    to_port         = 9090
-    protocol        = "tcp"
-    cidr_blocks     = var.private_subnets_cidr
-    description     = "Metrics from private subnets"
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = var.private_subnets_cidr
+    description = "Metrics from private subnets"
   }
 
   egress {
@@ -150,8 +150,8 @@ resource "aws_security_group" "cache" {
   })
 }
 
-output "app_security_group_id"      { value = aws_security_group.app.id }
-output "db_security_group_id"       { value = aws_security_group.db.id }
+output "app_security_group_id" { value = aws_security_group.app.id }
+output "db_security_group_id" { value = aws_security_group.db.id }
 output "database_security_group_id" { value = aws_security_group.db.id }
-output "cache_security_group_id"    { value = aws_security_group.cache.id }
-output "lb_security_group_id"       { value = aws_security_group.lb.id }
+output "cache_security_group_id" { value = aws_security_group.cache.id }
+output "lb_security_group_id" { value = aws_security_group.lb.id }

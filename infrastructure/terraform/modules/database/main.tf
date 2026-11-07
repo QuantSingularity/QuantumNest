@@ -1,20 +1,20 @@
-variable "db_name"           {}
-variable "environment"       {}
+variable "db_name" {}
+variable "environment" {}
 variable "db_instance_class" { default = "db.t3.small" }
-variable "db_username"       { sensitive = true }
-variable "db_password"       { sensitive = true }
-variable "private_subnet_ids"  { type = list(string) }
-variable "security_group_ids"  { type = list(string) }
-variable "storage_encrypted"   { default = true }
-variable "kms_key_id"          { default = null }
-variable "multi_az"            { default = false }
+variable "db_username" { sensitive = true }
+variable "db_password" { sensitive = true }
+variable "private_subnet_ids" { type = list(string) }
+variable "security_group_ids" { type = list(string) }
+variable "storage_encrypted" { default = true }
+variable "kms_key_id" { default = null }
+variable "multi_az" { default = false }
 variable "backup_retention_period" { default = 7 }
-variable "deletion_protection"  { default = false }
-variable "skip_final_snapshot"  { default = true }
+variable "deletion_protection" { default = false }
+variable "skip_final_snapshot" { default = true }
 variable "final_snapshot_identifier" { default = null }
-variable "monitoring_role_arn"  { default = null }
-variable "tags"                 {
-  type = map(string)
+variable "monitoring_role_arn" { default = null }
+variable "tags" {
+  type    = map(string)
   default = {}
 }
 
@@ -82,10 +82,10 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = var.security_group_ids
 
-  multi_az               = var.multi_az
+  multi_az                = var.multi_az
   backup_retention_period = var.backup_retention_period
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "sun:04:00-sun:05:00"
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "sun:04:00-sun:05:00"
 
   deletion_protection       = var.deletion_protection
   skip_final_snapshot       = var.skip_final_snapshot
@@ -100,8 +100,8 @@ resource "aws_db_instance" "main" {
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
-  auto_minor_version_upgrade  = true
-  apply_immediately           = var.environment != "prod"
+  auto_minor_version_upgrade = true
+  apply_immediately          = var.environment != "prod"
 
   copy_tags_to_snapshot = true
 
@@ -111,7 +111,7 @@ resource "aws_db_instance" "main" {
   })
 }
 
-output "db_instance_endpoint"  { value = aws_db_instance.main.endpoint }
-output "db_instance_id"        { value = aws_db_instance.main.id }
-output "db_endpoint"           { value = aws_db_instance.main.endpoint }
-output "db_subnet_group_name"  { value = aws_db_subnet_group.main.name }
+output "db_instance_endpoint" { value = aws_db_instance.main.endpoint }
+output "db_instance_id" { value = aws_db_instance.main.id }
+output "db_endpoint" { value = aws_db_instance.main.endpoint }
+output "db_subnet_group_name" { value = aws_db_subnet_group.main.name }

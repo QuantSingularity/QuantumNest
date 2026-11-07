@@ -1,20 +1,20 @@
-variable "app_name"           {}
-variable "environment"        {}
-variable "cluster_id"         {}
-variable "subnet_group_name"  {}
+variable "app_name" {}
+variable "environment" {}
+variable "cluster_id" {}
+variable "subnet_group_name" {}
 variable "security_group_ids" { type = list(string) }
-variable "node_type"          { default = "cache.r6g.large" }
+variable "node_type" { default = "cache.r6g.large" }
 variable "num_cache_clusters" { default = 1 }
 variable "at_rest_encryption_enabled" { default = true }
 variable "transit_encryption_enabled" { default = true }
-variable "auth_token"         {
-  default = null
+variable "auth_token" {
+  default   = null
   sensitive = true
 }
-variable "kms_key_id"         { default = null }
+variable "kms_key_id" { default = null }
 variable "snapshot_retention_limit" { default = 1 }
-variable "tags"               {
-  type = map(string)
+variable "tags" {
+  type    = map(string)
   default = {}
 }
 
@@ -79,9 +79,9 @@ resource "aws_elasticache_replication_group" "redis" {
   replication_group_id = var.cluster_id
   description          = "QuantumNest Redis cluster for ${var.environment}"
 
-  node_type            = var.node_type
-  num_cache_clusters   = var.num_cache_clusters
-  port                 = 6379
+  node_type          = var.node_type
+  num_cache_clusters = var.num_cache_clusters
+  port               = 6379
 
   subnet_group_name  = var.subnet_group_name
   security_group_ids = var.security_group_ids
@@ -121,8 +121,8 @@ resource "aws_cloudwatch_log_group" "redis_slow" {
   tags = var.tags
 }
 
-output "s3_bucket_name"        { value = aws_s3_bucket.main.id }
-output "s3_bucket_arn"         { value = aws_s3_bucket.main.arn }
+output "s3_bucket_name" { value = aws_s3_bucket.main.id }
+output "s3_bucket_arn" { value = aws_s3_bucket.main.arn }
 output "cache_cluster_address" { value = aws_elasticache_replication_group.redis.primary_endpoint_address }
-output "cache_cluster_id"      { value = aws_elasticache_replication_group.redis.id }
-output "cache_port"            { value = aws_elasticache_replication_group.redis.port }
+output "cache_cluster_id" { value = aws_elasticache_replication_group.redis.id }
+output "cache_port" { value = aws_elasticache_replication_group.redis.port }

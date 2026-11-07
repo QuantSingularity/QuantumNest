@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+$FileCreateMode 0640
+
+# Application logs
+if $programname startswith 'quantumnest' then /var/log/quantumnest/app.log
+& stop
+{% if remote_syslog_host | default('') %}
+
+# Forward everything else to the central log host over TCP, queueing on disk
+# while it is unreachable.
+*.* action(type="omfwd"
+           target="{{ remote_syslog_host }}"
+           port="{{ remote_syslog_port | default(514) }}"
+           protocol="tcp"
+           action.resumeRetryCount="-1"
+           queue.type="LinkedList"
+           queue.size="10000"
+           queue.filename="fwd_quantumnest"
+           queue.saveOnShutdown="on")
+{% endif %}

@@ -179,7 +179,6 @@ echo ""
 info "Running security checks..."
 
 # Check no plaintext passwords in tracked files
-sensitive_patterns=("password:" "secret:" "token:" "api_key:")
 files_to_check=(
   "kubernetes/base/app-configmap.yaml"
   "ansible/group_vars/all/vault.example.yml"

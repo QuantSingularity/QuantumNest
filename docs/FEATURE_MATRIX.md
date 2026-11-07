@@ -17,9 +17,9 @@ This document provides a comprehensive feature matrix for QuantumNest platform.
 
 | Feature                     | Short description                       | Module / File                       | CLI flag / API              | Example (path)                                                       | Notes                  |
 | --------------------------- | --------------------------------------- | ----------------------------------- | --------------------------- | -------------------------------------------------------------------- | ---------------------- |
-| **User Authentication**     | JWT-based secure authentication         | `code/backend/app/auth/`            | `POST /users/login`         | [examples/auth-example.md](examples/auth-example.md)                 | Supports Bearer tokens |
+| **User Authentication**     | JWT-based secure authentication         | `code/backend/app/auth/`            | `POST /users/login`         | -                                                                    | Supports Bearer tokens |
 | **Portfolio Management**    | Create and manage investment portfolios | `code/backend/app/api/portfolio.py` | `POST /portfolio/`          | [examples/portfolio-management.md](examples/portfolio-management.md) | Real-time tracking     |
-| **Market Data Integration** | Real-time and historical market data    | `code/backend/app/api/market.py`    | `GET /market/data/{symbol}` | [examples/market-data.md](examples/market-data.md)                   | Multiple data sources  |
+| **Market Data Integration** | Real-time and historical market data    | `code/backend/app/api/market.py`    | `GET /market/data/{symbol}` | -                                                                    | Multiple data sources  |
 | **Web Dashboard**           | Modern responsive web interface         | `web-frontend/src/`                 | -                           | -                                                                    | Next.js/TypeScript     |
 | **Mobile App**              | Full-featured mobile application        | `mobile-frontend/src/`              | -                           | -                                                                    | React Native           |
 
@@ -55,7 +55,7 @@ This document provides a comprehensive feature matrix for QuantumNest platform.
 | Feature                   | Short description             | Module / File                               | CLI flag / API                | Example (path)                                           | Notes                |
 | ------------------------- | ----------------------------- | ------------------------------------------- | ----------------------------- | -------------------------------------------------------- | -------------------- |
 | **REST API**              | FastAPI-based REST endpoints  | `code/backend/app/main.py`                  | All `/api/*` endpoints        | [API.md](API.md)                                         | OpenAPI/Swagger      |
-| **JWT Authentication**    | Secure token-based auth       | `code/backend/app/auth/authentication.py`   | `POST /users/login`           | [examples/auth-example.md](examples/auth-example.md)     | 30-minute expiry     |
+| **JWT Authentication**    | Secure token-based auth       | `code/backend/app/auth/authentication.py`   | `POST /users/login`           | -                                                        | 30-minute expiry     |
 | **Rate Limiting**         | Request throttling            | `code/backend/app/middleware/rate_limit.py` | Automatic                     | -                                                        | 100 req/min default  |
 | **CORS Support**          | Cross-origin resource sharing | `code/backend/app/main.py`                  | Configured via `CORS_ORIGINS` | [CONFIGURATION.md](CONFIGURATION.md)                     | Customizable origins |
 | **Async Task Processing** | Celery background tasks       | `code/backend/app/workers/`                 | All `/ai/*` endpoints         | [examples/ai-model-usage.md](examples/ai-model-usage.md) | Redis-backed         |

@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+# auditd rules for QuantumNest hosts.
+
+# Start from a clean slate, size the backlog, and log (not panic) on failure.
+-D
+-b 8192
+-f 1
+
+# Identity and privilege files
+-w /etc/passwd -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/sudoers -p wa -k privilege
+-w /etc/sudoers.d/ -p wa -k privilege
+
+# SSH configuration
+-w /etc/ssh/sshd_config -p wa -k sshd
+
+# Login records
+-w /var/log/faillog -p wa -k logins
+-w /var/log/lastlog -p wa -k logins
+
+# Time and host identity changes
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change
+-a always,exit -F arch=b64 -S sethostname -S setdomainname -k system-locale
+
+# Mounts and file deletions by real users
+-a always,exit -F arch=b64 -S mount -F auid>=1000 -F auid!=4294967295 -k mounts
+-a always,exit -F arch=b64 -S unlink -S unlinkat -S rename -S renameat -F auid>=1000 -F auid!=4294967295 -k delete
+{% if audit_immutable | default(false) | bool %}
+
+# Lock the rules until the next reboot.
+-e 2
+{% endif %}

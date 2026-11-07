@@ -136,7 +136,8 @@ graph TB
 - **Location**: `code/backend/`
 - **Entry Point**: `app/main.py`
 - **Structure**:
-  ```
+
+  ```text
   app/
   ├── main.py              # FastAPI app initialization
   ├── api/                 # API endpoints
@@ -229,7 +230,7 @@ graph TB
 
 #### Smart Contracts
 
-**TokenizedAsset.sol**
+##### TokenizedAsset.sol
 
 - **Location**: `code/blockchain/contracts/TokenizedAsset.sol`
 - **Type**: ERC-20 token
@@ -239,7 +240,7 @@ graph TB
   - Valuation updates
   - Fee management
 
-**PortfolioManager.sol**
+##### PortfolioManager.sol
 
 - **Location**: `code/blockchain/contracts/PortfolioManager.sol`
 - **Purpose**: On-chain portfolio management
@@ -248,7 +249,7 @@ graph TB
   - Rebalancing
   - Performance tracking
 
-**TradingPlatform.sol**
+##### TradingPlatform.sol
 
 - **Location**: `code/blockchain/contracts/TradingPlatform.sol`
 - **Purpose**: Decentralized exchange
@@ -293,7 +294,7 @@ graph TB
 
 ### User Authentication Flow
 
-```
+```text
 1. User submits credentials
 2. Backend validates against database
 3. JWT token generated
@@ -306,7 +307,7 @@ graph TB
 
 ### AI Prediction Flow
 
-```
+```text
 1. User requests prediction via API
 2. Backend creates Celery task
 3. Task queued in Redis
@@ -321,7 +322,7 @@ graph TB
 
 ### Portfolio Performance Flow
 
-```
+```text
 1. User views portfolio
 2. Frontend requests portfolio data
 3. Backend queries database for holdings
@@ -416,7 +417,7 @@ graph TB
 
 ## Deployment Architecture
 
-```
+```text
                     [Load Balancer]
                            |
         +-----------------+-------------------+

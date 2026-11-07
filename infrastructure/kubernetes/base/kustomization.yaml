@@ -3,8 +3,10 @@ kind: Kustomization
 
 namespace: quantumnest-prod
 
+# Namespaces are bootstrapped separately (kubectl apply -f base/namespace.yaml,
+# see DEPLOY.md). namespace.yaml defines the prod, staging and dev namespaces in
+# one file, which kustomize cannot render under a single `namespace:` field.
 resources:
-  - namespace.yaml
   - rbac.yaml
   - app-configmap.yaml
   - backend-deployment.yaml

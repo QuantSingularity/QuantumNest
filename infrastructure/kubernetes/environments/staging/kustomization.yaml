@@ -32,6 +32,9 @@ patches:
       - op: replace
         path: /data/ALLOWED_ORIGINS
         value: "https://staging.quantumnest.com,https://staging-m.quantumnest.com"
+      - op: replace
+        path: /data/API_URL
+        value: "https://staging.quantumnest.com/api"
 
 replicas:
   - name: quantumnest-backend

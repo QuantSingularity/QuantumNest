@@ -33,12 +33,12 @@ cd web-frontend && npm run dev  # Web frontend
 
 ### Access Points
 
-| Service                  | URL                         | Description            |
-| ------------------------ | --------------------------- | ---------------------- |
-| **Web Dashboard**        | http://localhost:3000       | Main user interface    |
-| **API Backend**          | http://localhost:8000       | REST API endpoints     |
-| **API Docs**             | http://localhost:8000/docs  | Interactive Swagger UI |
-| **Alternative API Docs** | http://localhost:8000/redoc | ReDoc documentation    |
+| Service                  | URL                           | Description            |
+| ------------------------ | ----------------------------- | ---------------------- |
+| **Web Dashboard**        | <http://localhost:3000>       | Main user interface    |
+| **API Backend**          | <http://localhost:8000>       | REST API endpoints     |
+| **API Docs**             | <http://localhost:8000/docs>  | Interactive Swagger UI |
+| **Alternative API Docs** | <http://localhost:8000/redoc> | ReDoc documentation    |
 
 ## CLI Usage
 
@@ -425,7 +425,7 @@ The web dashboard provides visual access to all platform features:
 
 ### Navigation
 
-```
+```text
 Main Menu:
 ├── Dashboard       # Portfolio overview
 ├── Portfolio       # Detailed portfolio management

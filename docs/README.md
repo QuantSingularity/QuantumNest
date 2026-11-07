@@ -18,6 +18,7 @@
    ```
 
 3. **Start the application**
+
    ```bash
    ./run_quantumnest.sh
    ```
@@ -46,7 +47,6 @@
 
 ### Advanced Topics
 
-- **[Migrations Guide](MIGRATIONS.md)** - Upgrading between versions
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 

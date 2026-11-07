@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+[DEFAULT]
+bantime = {{ fail2ban_bantime | default('1h') }}
+findtime = {{ fail2ban_findtime | default('10m') }}
+maxretry = {{ fail2ban_maxretry | default(5) }}
+backend = systemd
+ignoreip = 127.0.0.1/8 ::1{% for ip in fail2ban_ignoreip | default([]) %} {{ ip }}{% endfor %}
+
+
+[sshd]
+enabled = true
+port = {{ ssh_port | default(22) }}
+maxretry = 3
+{% if 'webservers' in group_names %}
+
+[nginx-http-auth]
+enabled = true
+{% endif %}

@@ -84,12 +84,12 @@ POST /users/
 
 **Request Body:**
 
-| Name     | Type   | Required? | Default | Description         | Example            |
-| -------- | ------ | --------- | ------- | ------------------- | ------------------ |
-| username | string | Yes       | -       | Unique username     | "john_doe"         |
-| email    | string | Yes       | -       | Valid email address | "john@example.com" |
-| password | string | Yes       | -       | Min 8 characters    | "SecureP@ss123"    |
-| role     | string | No        | "user"  | User role           | "user"             |
+| Name     | Type   | Required? | Default | Description         | Example              |
+| -------- | ------ | --------- | ------- | ------------------- | -------------------- |
+| username | string | Yes       | -       | Unique username     | "john_doe"           |
+| email    | string | Yes       | -       | Valid email address | "<john@example.com>" |
+| password | string | Yes       | -       | Min 8 characters    | "SecureP@ss123"      |
+| role     | string | No        | "user"  | User role           | "user"               |
 
 **Example Request:**
 
@@ -98,7 +98,7 @@ curl -X POST http://localhost:8000/users/ \
   -H "Content-Type: application/json" \
   -d '{
     "username": "john_doe",
-    "email": "john@example.com",
+    "email": "<john@example.com>",
     "password": "SecureP@ss123"
   }'
 ```
@@ -109,7 +109,7 @@ curl -X POST http://localhost:8000/users/ \
 {
   "id": 1,
   "username": "john_doe",
-  "email": "john@example.com",
+  "email": "<john@example.com>",
   "role": "user",
   "is_active": true,
   "created_at": "2025-04-01T10:30:00Z"
@@ -132,7 +132,7 @@ GET /users/{user_id}
 {
   "id": 1,
   "username": "john_doe",
-  "email": "john@example.com",
+  "email": "<john@example.com>",
   "role": "user",
   "is_active": true,
   "last_login": "2025-04-01T10:30:00Z",
@@ -148,11 +148,11 @@ PUT /users/{user_id}
 
 **Request Parameters:**
 
-| Name     | Type   | Required? | Default | Description  | Example            |
-| -------- | ------ | --------- | ------- | ------------ | ------------------ |
-| username | string | No        | -       | New username | "jane_doe"         |
-| email    | string | No        | -       | New email    | "jane@example.com" |
-| password | string | No        | -       | New password | "NewP@ss456"       |
+| Name     | Type   | Required? | Default | Description  | Example              |
+| -------- | ------ | --------- | ------- | ------------ | -------------------- |
+| username | string | No        | -       | New username | "jane_doe"           |
+| email    | string | No        | -       | New email    | "<jane@example.com>" |
+| password | string | No        | -       | New password | "NewP@ss456"         |
 
 #### Delete User
 
@@ -170,7 +170,7 @@ POST /users/login
 
 **Request:**
 
-```
+```text
 email=user@example.com&password=yourpassword
 ```
 
@@ -580,7 +580,7 @@ GET /admin/stats
 
 ```json
 {
-  "items": [...],
+  "items": [],
   "total": 100,
   "page": 1,
   "size": 10,
@@ -670,5 +670,5 @@ Official SDKs available for:
 
 ---
 
-**Interactive API Documentation**: http://localhost:8000/docs  
-**Alternative Documentation**: http://localhost:8000/redoc
+**Interactive API Documentation**: <http://localhost:8000/docs>  
+**Alternative Documentation**: <http://localhost:8000/redoc>

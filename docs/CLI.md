@@ -65,7 +65,7 @@ Most scripts support these common options:
 
 **Example Output:**
 
-```
+```text
 🚀 QuantumNest Environment Setup
 ================================
 

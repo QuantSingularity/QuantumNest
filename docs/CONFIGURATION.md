@@ -88,12 +88,12 @@ DATABASE_URL=postgresql://user:password@localhost:5432/quantumnest
 
 ### Blockchain Configuration
 
-| Option             | Type   | Default                            | Description           | Where to set (env/file) |
-| ------------------ | ------ | ---------------------------------- | --------------------- | ----------------------- |
-| `ETHEREUM_RPC_URL` | string | "http://localhost:8545"            | Ethereum RPC endpoint | .env                    |
-| `POLYGON_RPC_URL`  | string | "https://polygon-rpc.com"          | Polygon RPC endpoint  | .env                    |
-| `BSC_RPC_URL`      | string | "https://bsc-dataseed.binance.org" | BSC RPC endpoint      | .env                    |
-| `PRIVATE_KEY`      | string | null                               | Wallet private key    | .env (sensitive!)       |
+| Option             | Type   | Default                              | Description           | Where to set (env/file) |
+| ------------------ | ------ | ------------------------------------ | --------------------- | ----------------------- |
+| `ETHEREUM_RPC_URL` | string | "<http://localhost:8545>"            | Ethereum RPC endpoint | .env                    |
+| `POLYGON_RPC_URL`  | string | "<https://polygon-rpc.com>"          | Polygon RPC endpoint  | .env                    |
+| `BSC_RPC_URL`      | string | "<https://bsc-dataseed.binance.org>" | BSC RPC endpoint      | .env                    |
+| `PRIVATE_KEY`      | string | null                                 | Wallet private key    | .env (sensitive!)       |
 
 ### CORS Configuration
 
@@ -309,5 +309,4 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 **See Also:**
 
 - [Installation Guide](INSTALLATION.md)
-- [Security Best Practices](../SECURITY.md)
 - [Environment Manager Script](CLI.md#env_managersh)

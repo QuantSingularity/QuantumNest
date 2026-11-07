@@ -56,7 +56,8 @@ function show_help {
 
 # Function to collect logs from all components
 function collect_logs {
-  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
   echo -e "${BLUE}Collecting logs from all components...${NC}"
 
   # Create timestamp directory
@@ -204,8 +205,10 @@ function clean_logs {
   echo -e "${BLUE}Cleaning logs older than ${days} days...${NC}"
 
   # Find and remove old log collections
-  local old_collections=$(find "$LOG_DIR" -maxdepth 1 -type d -mtime "+$days" | grep -v "^$LOG_DIR$")
-  local count=$(echo "$old_collections" | grep -v '^$' | wc -l)
+  local old_collections
+  old_collections=$(find "$LOG_DIR" -maxdepth 1 -type d -mtime "+$days" | grep -v "^$LOG_DIR$") || true
+  local count
+  count=$(echo "$old_collections" | grep -v '^$' | wc -l)
 
   if [ "$count" -eq 0 ]; then
     echo -e "${GREEN}No log collections older than ${days} days found.${NC}"
@@ -239,12 +242,14 @@ function search_logs {
   echo -e "${BLUE}Searching for '${term}' across all logs...${NC}"
 
   # Create results directory
-  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
   local results_dir="${LOG_DIR}/search_${timestamp}"
   mkdir -p "$results_dir"
 
   # Search in all log collections
-  local collections=$(find "$LOG_DIR" -maxdepth 1 -type d | grep -v "^$LOG_DIR$" | grep -v "search_")
+  local collections
+  collections=$(find "$LOG_DIR" -maxdepth 1 -type d | grep -v "^$LOG_DIR$" | grep -v "search_") || true
 
   if [ -z "$collections" ]; then
     echo -e "${YELLOW}No log collections found.${NC}"
@@ -266,7 +271,8 @@ function search_logs {
   local total_matches=0
 
   for collection in $collections; do
-    local collection_name=$(basename "$collection")
+    local collection_name
+    collection_name=$(basename "$collection")
     echo "Searching in collection: ${collection_name}"
 
     {
@@ -274,8 +280,10 @@ function search_logs {
       echo "----------------------------------------"
     } >> "${results_dir}/results.txt"
 
-    local matches=$(grep -r --include="*.log" -- "$term" "$collection" 2>/dev/null)
-    local match_count=$(echo "$matches" | grep -v '^$' | wc -l)
+    local matches
+    matches=$(grep -r --include="*.log" -- "$term" "$collection" 2>/dev/null) || true
+    local match_count
+    match_count=$(echo "$matches" | grep -v '^$' | wc -l)
     total_matches=$((total_matches + match_count))
 
     if [ "$match_count" -eq 0 ]; then
@@ -300,12 +308,14 @@ function analyze_logs {
   echo -e "${BLUE}Analyzing logs for errors and warnings...${NC}"
 
   # Create analysis directory
-  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
   local analysis_dir="${LOG_DIR}/analysis_${timestamp}"
   mkdir -p "$analysis_dir"
 
   # Find the most recent log collection
-  local latest_collection=$(find "$LOG_DIR" -maxdepth 1 -type d | grep -v "^$LOG_DIR$" | grep -v "search_" | grep -v "analysis_" | sort -r | head -n 1)
+  local latest_collection
+  latest_collection=$(find "$LOG_DIR" -maxdepth 1 -type d | grep -v "^$LOG_DIR$" | grep -v "search_" | grep -v "analysis_" | sort -r | head -n 1)
 
   if [ -z "$latest_collection" ]; then
     echo -e "${YELLOW}No log collections found.${NC}"
@@ -330,7 +340,8 @@ function analyze_logs {
     echo "## ERROR ANALYSIS"
     echo "----------------------------------------"
 
-    local error_count=$(grep -r -i "error" "$latest_collection" 2>/dev/null | wc -l)
+    local error_count
+    error_count=$(grep -r -i "error" "$latest_collection" 2>/dev/null | wc -l)
     echo "Total errors found: ${error_count}"
     echo ""
 
@@ -355,7 +366,8 @@ function analyze_logs {
     echo "## WARNING ANALYSIS"
     echo "----------------------------------------"
 
-    local warning_count=$(grep -r -i "warning" "$latest_collection" 2>/dev/null | wc -l)
+    local warning_count
+    warning_count=$(grep -r -i "warning" "$latest_collection" 2>/dev/null | wc -l)
     echo "Total warnings found: ${warning_count}"
     echo ""
 
@@ -381,7 +393,8 @@ function analyze_logs {
     echo "----------------------------------------"
 
     # Look for response time indicators
-    local response_times=$(grep -r -i "response time\|latency\|took [0-9]" "$latest_collection" 2>/dev/null)
+    local response_times
+    response_times=$(grep -r -i "response time\|latency\|took [0-9]" "$latest_collection" 2>/dev/null) || true
     if [ -n "$response_times" ]; then
       echo "### Response time indicators:"
       echo "$response_times" | head -n 20
@@ -389,7 +402,8 @@ function analyze_logs {
     fi
 
     # Look for memory usage
-    local memory_usage=$(grep -r -i "memory\|heap\|ram" "$latest_collection" 2>/dev/null)
+    local memory_usage
+    memory_usage=$(grep -r -i "memory\|heap\|ram" "$latest_collection" 2>/dev/null) || true
     if [ -n "$memory_usage" ]; then
       echo "### Memory usage indicators:"
       echo "$memory_usage" | head -n 20

@@ -55,7 +55,8 @@ function command_exists {
 
 # Function to check all dependencies
 function check_dependencies {
-  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
   local report_file="${REPORTS_DIR}/dependency_check_${timestamp}.txt"
 
   echo -e "${BLUE}Checking dependencies across all components...${NC}"
@@ -239,7 +240,8 @@ function check_dependencies {
 
 # Function to check for outdated dependencies
 function check_outdated_dependencies {
-  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
   local report_file="${REPORTS_DIR}/outdated_dependencies_${timestamp}.txt"
 
   echo -e "${BLUE}Checking for outdated dependencies...${NC}"
@@ -342,7 +344,8 @@ function check_outdated_dependencies {
 
 # Function to run security audit on dependencies
 function security_audit {
-  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
   local report_file="${REPORTS_DIR}/security_audit_${timestamp}.txt"
 
   echo -e "${BLUE}Running security audit on dependencies...${NC}"
@@ -451,7 +454,8 @@ function security_audit {
 
 # Function to generate comprehensive dependency report
 function generate_report {
-  local timestamp=$(date +%Y%m%d_%H%M%S)
+  local timestamp
+  timestamp=$(date +%Y%m%d_%H%M%S)
   local report_file="${REPORTS_DIR}/comprehensive_report_${timestamp}.txt"
 
   echo -e "${BLUE}Generating comprehensive dependency report...${NC}"

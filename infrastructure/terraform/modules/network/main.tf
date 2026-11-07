@@ -1,16 +1,16 @@
-variable "name"             {}
-variable "environment"      {}
-variable "vpc_cidr"         {}
-variable "azs"              { type = list(string) }
-variable "private_subnets"  { type = list(string) }
-variable "public_subnets"   { type = list(string) }
+variable "name" {}
+variable "environment" {}
+variable "vpc_cidr" {}
+variable "azs" { type = list(string) }
+variable "private_subnets" { type = list(string) }
+variable "public_subnets" { type = list(string) }
 variable "database_subnets" { type = list(string) }
-variable "enable_nat_gateway"    { default = true }
-variable "enable_dns_hostnames"  { default = true }
-variable "enable_dns_support"    { default = true }
+variable "enable_nat_gateway" { default = true }
+variable "enable_dns_hostnames" { default = true }
+variable "enable_dns_support" { default = true }
 variable "flow_log_destination_arn" { default = "" }
-variable "tags"             {
-  type = map(string)
+variable "tags" {
+  type    = map(string)
   default = {}
 }
 
@@ -33,8 +33,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge(var.tags, {
-    Name        = "${var.name}-public-subnet-${count.index + 1}"
-    Environment = var.environment
+    Name                     = "${var.name}-public-subnet-${count.index + 1}"
+    Environment              = var.environment
     "kubernetes.io/role/elb" = "1"
   })
 }
@@ -46,8 +46,8 @@ resource "aws_subnet" "private" {
   availability_zone = var.azs[count.index]
 
   tags = merge(var.tags, {
-    Name        = "${var.name}-private-subnet-${count.index + 1}"
-    Environment = var.environment
+    Name                              = "${var.name}-private-subnet-${count.index + 1}"
+    Environment                       = var.environment
     "kubernetes.io/role/internal-elb" = "1"
   })
 }
@@ -202,10 +202,10 @@ resource "aws_iam_role_policy" "flow_log" {
   })
 }
 
-output "vpc_id"              { value = aws_vpc.main.id }
-output "public_subnet_ids"  { value = aws_subnet.public[*].id }
+output "vpc_id" { value = aws_vpc.main.id }
+output "public_subnet_ids" { value = aws_subnet.public[*].id }
 output "private_subnet_ids" { value = aws_subnet.private[*].id }
 output "database_subnet_ids" { value = aws_subnet.database[*].id }
 output "database_subnet_group" { value = aws_db_subnet_group.database.name }
-output "private_subnets"    { value = aws_subnet.private[*].id }
-output "public_subnets"     { value = aws_subnet.public[*].id }
+output "private_subnets" { value = aws_subnet.private[*].id }
+output "public_subnets" { value = aws_subnet.public[*].id }

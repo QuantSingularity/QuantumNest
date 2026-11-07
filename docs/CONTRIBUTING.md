@@ -93,7 +93,7 @@ git commit -m "feat: add portfolio risk metrics
 
 **Commit Message Format:**
 
-```
+```text
 <type>: <subject>
 
 <body>
@@ -329,7 +329,7 @@ When updating documentation:
 
 ### File Structure
 
-```
+```text
 docs/
 ├── README.md              # Update when adding new docs
 ├── API.md                 # Update for API changes

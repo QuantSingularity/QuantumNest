@@ -12,7 +12,6 @@
 6. [Operational Procedures](#operational-procedures)
 7. [Technology Stack](#technology-stack)
 8. [Deployment Guidelines](#deployment-guidelines)
-9. [Contact and Support](#contact-and-support)
 
 ---
 

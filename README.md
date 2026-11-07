@@ -32,7 +32,7 @@ QuantumNest demonstrates a tokenized-asset investment workflow across a real, ru
 
 ## Project Structure
 
-```
+```text
 QuantumNest/
 ├── code/
 │   ├── backend/                # FastAPI application
@@ -103,7 +103,7 @@ QuantumNest/
 
 ## Architecture
 
-```
+```text
 Clients
   ├── web-frontend (Next.js)             ── HTTP/JSON ──┐
   └── mobile-frontend (Next.js, separate deploy) ── HTTP/JSON ──┤

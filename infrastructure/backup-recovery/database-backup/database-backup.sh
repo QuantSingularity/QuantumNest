@@ -12,10 +12,10 @@ AUDIT_LOG="/var/log/quantumnest/backup-audit.log"
 
 # Source configuration
 if [[ -f "$CONFIG_FILE" ]]; then
+    # shellcheck source=/dev/null
     source "$CONFIG_FILE"
 else
-    echo "WARNING: Configuration file not found: $CONFIG_FILE - using defaults" >echo "ERROR: Configuration file not found: $CONFIG_FILE" >&22
-
+    echo "WARNING: Configuration file not found: $CONFIG_FILE - using defaults" >&2
 fi
 
 # Default configuration values
@@ -223,7 +223,8 @@ upload_to_s3() {
     local backup_filename="$1"
     local backup_path="${BACKUP_DIR}/${backup_filename}"
     local metadata_path="${backup_path}.metadata"
-    local s3_key="database-backups/$(date +%Y/%m/%d)/${backup_filename}"
+    local s3_key
+    s3_key="database-backups/$(date +%Y/%m/%d)/${backup_filename}"
 
     log "Uploading backup to S3: s3://${S3_BUCKET}/${s3_key}"
 
