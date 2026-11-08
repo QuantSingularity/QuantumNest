@@ -105,6 +105,7 @@ typechain-types/
 
 # Docker
 *.dockerignore
+!infrastructure/.dockerignore
 # If you store built images or context tarballs locally:
 # *.tar
 # *.tar.gz

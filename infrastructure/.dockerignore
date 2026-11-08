@@ -1,0 +1,24 @@
+# Keep the build context small: `terraform init` earlier in CI downloads
+# provider binaries into .terraform/ (hundreds of MB) that must not be sent
+# to the Docker daemon or copied into the image by `COPY . /workspace/`.
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+**/*.tfvars
+!**/*.tfvars.example
+
+# Secrets and local environment files (the .example templates are kept)
+.env
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# VCS / editor / Python noise
+**/.git
+**/__pycache__/
+**/*.pyc
+**/node_modules/
+**/.DS_Store

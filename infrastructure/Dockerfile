@@ -91,8 +91,15 @@ COPY --from=awscli-installer    /usr/local/aws-cli       /usr/local/aws-cli
 COPY --from=awscli-installer    /usr/local/bin/aws       /usr/local/bin/aws
 COPY --from=awscli-installer    /usr/local/bin/aws_completer /usr/local/bin/aws_completer
 
-# Install Ansible and Python dependencies
-RUN python3 -m pip install --no-cache-dir --break-system-packages \
+# Install Ansible and Python dependencies into a virtualenv. Installing into the
+# system Python fails on Ubuntu 24.04: pip cannot upgrade distro-owned packages
+# such as PyYAML ("Cannot uninstall PyYAML ... installed by debian").
+# Re-declared (with a default) so the version is always in scope for this stage.
+ARG ANSIBLE_VERSION=10.4.0
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv "${VIRTUAL_ENV}"
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+RUN pip install --no-cache-dir \
     "ansible==${ANSIBLE_VERSION}" \
     ansible-lint \
     boto3 \
