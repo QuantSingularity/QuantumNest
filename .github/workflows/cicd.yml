@@ -340,10 +340,19 @@ jobs:
       - name: Install lychee (link checker)
         run: |
           set -euo pipefail
+          # Retries transient failures (504s etc.) and downloads to a file first, so a
+          # partial response is never piped into tar.
+          download() {
+            curl --fail --silent --show-error --location \
+              --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 240 \
+              --connect-timeout 20 --max-time 120 --output "$2" "$1"
+          }
           mkdir -p "$HOME/.local/bin"
-          curl -fsSL "https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-gnu.tar.gz" \
-            | tar xz -C "$HOME/.local/bin" --strip-components=1 --wildcards '*/lychee'
+          archive="$RUNNER_TEMP/lychee.tar.gz"
+          download "https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-gnu.tar.gz" "$archive"
+          tar xzf "$archive" -C "$HOME/.local/bin" --strip-components=1 --wildcards '*/lychee'
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/lychee" --version
 
       - name: Check internal links and anchors
         run: |
@@ -488,11 +497,18 @@ jobs:
       - name: Install kubeconform and kustomize
         run: |
           set -euo pipefail
+          # Retries transient failures (504s etc.) and downloads to a file first, so a
+          # partial response is never piped into tar.
+          download() {
+            curl --fail --silent --show-error --location \
+              --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 240 \
+              --connect-timeout 20 --max-time 120 --output "$2" "$1"
+          }
           mkdir -p "$HOME/.local/bin"
-          curl -fsSL "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
-            | tar xz -C "$HOME/.local/bin" kubeconform
-          curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
-            | tar xz -C "$HOME/.local/bin" kustomize
+          download "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" "$RUNNER_TEMP/kubeconform.tar.gz"
+          tar xzf "$RUNNER_TEMP/kubeconform.tar.gz" -C "$HOME/.local/bin" kubeconform
+          download "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" "$RUNNER_TEMP/kustomize.tar.gz"
+          tar xzf "$RUNNER_TEMP/kustomize.tar.gz" -C "$HOME/.local/bin" kustomize
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       # Rendered offline, so no cluster is needed (kubectl --dry-run needs an API server).
@@ -722,9 +738,15 @@ jobs:
       - name: Lint Dockerfile (fails on errors, prints warnings)
         run: |
           set -euo pipefail
+          # Retries transient failures (504s etc.) and downloads to a file first, so a
+          # partial response is never piped into tar.
+          download() {
+            curl --fail --silent --show-error --location \
+              --retry 6 --retry-all-errors --retry-delay 5 --retry-max-time 240 \
+              --connect-timeout 20 --max-time 120 --output "$2" "$1"
+          }
           mkdir -p "$HOME/.local/bin"
-          curl -fsSL -o "$HOME/.local/bin/hadolint" \
-            "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-linux-x86_64"
+          download "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-linux-x86_64" "$HOME/.local/bin/hadolint"
           chmod +x "$HOME/.local/bin/hadolint"
           "$HOME/.local/bin/hadolint" --failure-threshold error infrastructure/Dockerfile
 
