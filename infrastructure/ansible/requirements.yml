@@ -2,3 +2,6 @@
 collections:
   - name: community.general
     version: ">=8.0.0"
+  # ansible.posix.profile_tasks callback (see ansible.cfg)
+  - name: ansible.posix
+    version: ">=1.5.0"
